@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  projects    Project[]
+  labels      Label[]
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  status      String   @default("active")
+  owner       String?
+  team        String?
+  repos       String?
+  color       String   @default("#6366f1")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  boards      Board[]
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  defaultView String   @default("board")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  columns     Column[]
+  tasks       Task[]
+}
+
+model Column {
+  id          String   @id @default(cuid())
+  boardId     String
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  name        String
+  color       String   @default("#6b7280")
+  position    Int
+  wipLimit    Int?
+  isCollapsed Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  tasks       Task[]
+}
+
+model Task {
+  id              String    @id @default(cuid())
+  columnId        String
+  column          Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  boardId         String
+  board           Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  parentId        String?
+  parent          Task?     @relation("Subtasks", fields: [parentId], references: [id], onDelete: SetNull)
+  subtasks        Task[]    @relation("Subtasks")
+  title           String
+  description     String?
+  status          String
+  type            String    @default("task")
+  priority        String    @default("none")
+  storyPoints     Int?
+  estimatedEffort String?
+  dueDate         DateTime?
+  requestedBy     String?
+  assignedTo      String?
+  position        Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+  labels          TaskLabel[]
+  dependenciesFrom TaskDependency[] @relation("DependencySource")
+  dependenciesTo   TaskDependency[] @relation("DependencyTarget")
+  comments        Comment[]
+  activities      Activity[]
+}
+
+model Label {
+  id          String   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  color       String   @default("#6366f1")
+  tasks       TaskLabel[]
+}
+
+model TaskLabel {
+  taskId  String
+  task    Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  labelId String
+  label   Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
+}
+
+model TaskDependency {
+  id           String @id @default(cuid())
+  sourceTaskId String
+  sourceTask   Task   @relation("DependencySource", fields: [sourceTaskId], references: [id], onDelete: Cascade)
+  targetTaskId String
+  targetTask   Task   @relation("DependencyTarget", fields: [targetTaskId], references: [id], onDelete: Cascade)
+  type         String @default("blocks")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  action    String
+  field     String?
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+}

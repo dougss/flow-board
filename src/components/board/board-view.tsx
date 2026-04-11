@@ -1,0 +1,182 @@
+"use client";
+
+import { useState } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+  type DragOverEvent,
+} from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { useQueryClient } from "@tanstack/react-query";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Column } from "./column";
+import { TaskCard } from "./task-card";
+import { useBoardQuery, useReorderTask } from "@/hooks/use-board";
+import type { TaskWithRelations } from "@/types";
+
+interface BoardViewProps {
+  boardId: string;
+}
+
+export function BoardView({ boardId }: BoardViewProps) {
+  const queryClient = useQueryClient();
+  const { data: board, isLoading } = useBoardQuery(boardId);
+  const reorderTask = useReorderTask(boardId);
+
+  const [activeTask, setActiveTask] = useState<TaskWithRelations | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const findTask = (id: string): TaskWithRelations | undefined => {
+    if (!board) return undefined;
+    for (const col of board.columns) {
+      const task = col.tasks.find((t: { id: string }) => t.id === id);
+      if (task) return task as unknown as TaskWithRelations;
+    }
+    return undefined;
+  };
+
+  const findColumnByTaskId = (taskId: string): string | undefined => {
+    if (!board) return undefined;
+    for (const col of board.columns) {
+      if (col.tasks.some((t: { id: string }) => t.id === taskId)) return col.id;
+    }
+    return undefined;
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const task = findTask(String(event.active.id));
+    setActiveTask(task ?? null);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over || !board) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    const activeColId = findColumnByTaskId(activeId);
+    // over could be a column id or a task id
+    const overColId =
+      board.columns.find((c: { id: string }) => c.id === overId)?.id ??
+      findColumnByTaskId(overId);
+
+    if (!activeColId || !overColId || activeColId === overColId) return;
+
+    // Optimistic cross-column move in cache
+    queryClient.setQueryData(["board", boardId], (old: typeof board) => {
+      if (!old) return old;
+      return {
+        ...old,
+        columns: old.columns.map(
+          (col: { id: string; tasks: { id: string }[] }) => {
+            if (col.id === activeColId) {
+              return {
+                ...col,
+                tasks: col.tasks.filter((t) => t.id !== activeId),
+              };
+            }
+            if (col.id === overColId) {
+              const task = findTask(activeId);
+              if (!task) return col;
+              return {
+                ...col,
+                tasks: [...col.tasks, { ...task, columnId: overColId }],
+              };
+            }
+            return col;
+          },
+        ),
+      };
+    });
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveTask(null);
+
+    if (!over || !board) return;
+
+    const taskId = String(active.id);
+    const overId = String(over.id);
+
+    // Determine target column and position
+    const targetColId =
+      board.columns.find((c: { id: string }) => c.id === overId)?.id ??
+      findColumnByTaskId(overId);
+
+    if (!targetColId) return;
+
+    const targetCol = board.columns.find(
+      (c: { id: string }) => c.id === targetColId,
+    );
+    const position = targetCol
+      ? targetCol.tasks.findIndex((t: { id: string }) => t.id === overId)
+      : 0;
+
+    try {
+      await reorderTask.mutateAsync({
+        taskId,
+        columnId: targetColId,
+        position: position < 0 ? 0 : position,
+      });
+    } catch {
+      // mutation already handles invalidation; optimistic cache reverts on error
+      queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex gap-4 p-6 overflow-x-auto">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="flex w-72 shrink-0 flex-col gap-3">
+            <Skeleton className="h-10 w-full rounded-lg" />
+            {Array.from({ length: 3 }).map((__, j) => (
+              <Skeleton key={j} className="h-20 w-full rounded-md" />
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!board) return null;
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      <ScrollArea className="w-full whitespace-nowrap">
+        <div className="flex gap-4 p-6 items-start">
+          {board.columns.map((col: Parameters<typeof Column>[0]["column"]) => (
+            <Column key={col.id} column={col} boardId={boardId} />
+          ))}
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+
+      <DragOverlay>
+        {activeTask ? <TaskCard task={activeTask} overlay /> : null}
+      </DragOverlay>
+    </DndContext>
+  );
+}
