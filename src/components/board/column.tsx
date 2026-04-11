@@ -20,6 +20,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { TaskCard } from "./task-card";
+import {
+  useCreateTask,
+  useUpdateColumn,
+  useDeleteColumn,
+} from "@/hooks/use-board";
 import type { ColumnWithTasks } from "@/types";
 
 interface ColumnProps {
@@ -35,6 +40,10 @@ export function Column({ column, boardId }: ColumnProps) {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const quickAddRef = useRef<HTMLInputElement>(null);
 
+  const createTask = useCreateTask(boardId);
+  const updateColumn = useUpdateColumn(boardId);
+  const deleteColumn = useDeleteColumn(boardId);
+
   const taskIds = column.tasks.map((t) => t.id);
   const wipExceeded =
     column.wipLimit != null && column.tasks.length > column.wipLimit;
@@ -45,16 +54,13 @@ export function Column({ column, boardId }: ColumnProps) {
     if (editingName) nameInputRef.current?.focus();
   }, [editingName]);
 
-  const handleNameKeyDown = async (
-    e: React.KeyboardEvent<HTMLInputElement>,
-  ) => {
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       setEditingName(false);
       if (nameValue.trim() && nameValue !== column.name) {
-        await fetch(`/api/columns/${column.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: nameValue.trim() }),
+        updateColumn.mutate({
+          columnId: column.id,
+          data: { name: nameValue.trim() },
         });
       }
     }
@@ -64,20 +70,15 @@ export function Column({ column, boardId }: ColumnProps) {
     }
   };
 
-  const handleQuickAdd = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleQuickAdd = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter" || !quickAdd.trim()) return;
     const title = quickAdd.trim();
     setQuickAdd("");
-    await fetch("/api/tasks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, columnId: column.id, boardId }),
-    });
-    // Parent board-view will invalidate the query via polling or manual trigger
+    createTask.mutate({ title, columnId: column.id, boardId });
   };
 
-  const handleDeleteColumn = async () => {
-    await fetch(`/api/columns/${column.id}`, { method: "DELETE" });
+  const handleDeleteColumn = () => {
+    deleteColumn.mutate(column.id);
   };
 
   return (

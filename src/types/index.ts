@@ -7,16 +7,9 @@ export type TaskType =
   | "investigation"
   | "architecture"
   | "integration"
-  | "infra"
-  | string;
+  | "infra";
 
-export type TaskPriority =
-  | "urgent"
-  | "high"
-  | "medium"
-  | "low"
-  | "none"
-  | string;
+export type TaskPriority = "urgent" | "high" | "medium" | "low" | "none";
 
 export type DependencyType = "blocks" | "blocked_by" | "relates_to";
 

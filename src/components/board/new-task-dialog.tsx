@@ -36,7 +36,29 @@ interface NewTaskDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const TASK_TYPES: TaskType[] = ["Task", "Bug", "Feature", "Story", "Epic"];
+const TASK_TYPES: TaskType[] = [
+  "task",
+  "bug",
+  "feature",
+  "improvement",
+  "tech-debt",
+  "investigation",
+  "architecture",
+  "integration",
+  "infra",
+];
+
+const TASK_TYPE_LABELS: Record<TaskType, string> = {
+  task: "Task",
+  bug: "Bug",
+  feature: "Feature",
+  improvement: "Improvement",
+  "tech-debt": "Tech Debt",
+  investigation: "Investigation",
+  architecture: "Architecture",
+  integration: "Integration",
+  infra: "Infra",
+};
 const PRIORITIES: TaskPriority[] = ["none", "low", "medium", "high", "urgent"];
 
 const PRIORITY_LABELS: Record<TaskPriority, string> = {
@@ -75,7 +97,7 @@ export function NewTaskDialog({
   const [form, setForm] = useState<FormState>({
     title: "",
     description: "",
-    type: "Task",
+    type: "task",
     priority: "none",
     columnId: defaultCol,
     storyPoints: "",
@@ -92,7 +114,7 @@ export function NewTaskDialog({
     setForm({
       title: "",
       description: "",
-      type: "Task",
+      type: "task",
       priority: "none",
       columnId: defaultCol,
       storyPoints: "",
@@ -186,7 +208,7 @@ export function NewTaskDialog({
                 <SelectContent>
                   {TASK_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>
-                      {t}
+                      {TASK_TYPE_LABELS[t]}
                     </SelectItem>
                   ))}
                 </SelectContent>

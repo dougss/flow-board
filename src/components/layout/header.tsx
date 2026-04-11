@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBoardStore } from "@/store/board-store";
+import { NewTaskDialog } from "@/components/board/new-task-dialog";
+import { FilterPanel } from "@/components/filters/filter-panel";
 import type { ViewType } from "@/types";
 
 interface HeaderProps {
@@ -36,6 +38,7 @@ const views: {
 export function Header({ boardId, title, projectName }: HeaderProps) {
   const { activeView, setActiveView } = useBoardStore();
   const [filterOpen, setFilterOpen] = useState(false);
+  const [newTaskOpen, setNewTaskOpen] = useState(false);
 
   const handleFilterClick = () => {
     setFilterOpen((v) => !v);
@@ -106,11 +109,31 @@ export function Header({ boardId, title, projectName }: HeaderProps) {
           </kbd>
         </button>
 
-        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-colors font-medium">
+        <button
+          onClick={() => setNewTaskOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-colors font-medium"
+        >
           <Plus className="w-3.5 h-3.5" />
           New Task
         </button>
       </div>
+
+      {boardId && (
+        <NewTaskDialog
+          boardId={boardId}
+          columns={[]}
+          open={newTaskOpen}
+          onOpenChange={setNewTaskOpen}
+        />
+      )}
+
+      {boardId && (
+        <FilterPanel
+          boardId={boardId}
+          open={filterOpen}
+          onClose={() => setFilterOpen(false)}
+        />
+      )}
     </header>
   );
 }

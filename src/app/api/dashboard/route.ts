@@ -39,12 +39,20 @@ export async function GET(request: Request): Promise<NextResponse> {
         dueDate: { lt: now },
         status: { not: "Done" },
       },
+      select: {
+        id: true,
+        title: true,
+        dueDate: true,
+        status: true,
+        priority: true,
+      },
     }),
-    db.task.count({
+    db.task.findMany({
       where: {
         boardId,
         completedAt: { gte: thirtyDaysAgo },
       },
+      select: { createdAt: true, completedAt: true },
     }),
     db.task.count({
       where: {
@@ -60,15 +68,6 @@ export async function GET(request: Request): Promise<NextResponse> {
       select: { completedAt: true },
     }),
   ]);
-
-  // Lead time — tasks completed last 30 days with completedAt set
-  const leadTimeTasks = await db.task.findMany({
-    where: {
-      boardId,
-      completedAt: { gte: thirtyDaysAgo },
-    },
-    select: { createdAt: true, completedAt: true },
-  });
 
   type TaskSummary = {
     status: string;
@@ -124,9 +123,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([week, completed]) => ({ week, completed }));
 
-  // Avg lead time in days
+  // Avg lead time in days — reuse completedLast30 (already has createdAt + completedAt)
   type LeadTimeTask = { createdAt: Date; completedAt: Date | null };
-  const leadTimes = leadTimeTasks
+  const leadTimes = completedLast30
     .filter((t: LeadTimeTask) => t.completedAt !== null)
     .map(
       (t: LeadTimeTask) =>
@@ -143,7 +142,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     tasksByPriority,
     tasksByType,
     overdueTasks,
-    completedLast30Days: completedLast30,
+    completedLast30Days: completedLast30.length,
     createdLast30Days: createdLast30,
     velocity,
     avgLeadTime: Math.round(avgLeadTime * 10) / 10,

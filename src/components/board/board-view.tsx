@@ -22,6 +22,22 @@ import { TaskCard } from "./task-card";
 import { useBoardQuery, useReorderTask } from "@/hooks/use-board";
 import type { TaskWithRelations } from "@/types";
 
+type BoardTask = {
+  id: string;
+  columnId: string;
+  boardId: string;
+  title: string;
+  status: string;
+  type: string;
+  priority: string;
+  storyPoints: number | null;
+  dueDate: string | null;
+  assignedTo: string | null;
+  position: number;
+  labels: { label: { id: string; name: string; color: string } }[];
+  [key: string]: unknown;
+};
+
 interface BoardViewProps {
   boardId: string;
 }
@@ -31,7 +47,7 @@ export function BoardView({ boardId }: BoardViewProps) {
   const { data: board, isLoading } = useBoardQuery(boardId);
   const reorderTask = useReorderTask(boardId);
 
-  const [activeTask, setActiveTask] = useState<TaskWithRelations | null>(null);
+  const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -40,11 +56,11 @@ export function BoardView({ boardId }: BoardViewProps) {
     }),
   );
 
-  const findTask = (id: string): TaskWithRelations | undefined => {
+  const findTask = (id: string): BoardTask | undefined => {
     if (!board) return undefined;
     for (const col of board.columns) {
       const task = col.tasks.find((t: { id: string }) => t.id === id);
-      if (task) return task as unknown as TaskWithRelations;
+      if (task) return task as unknown as BoardTask;
     }
     return undefined;
   };
@@ -175,7 +191,9 @@ export function BoardView({ boardId }: BoardViewProps) {
       </ScrollArea>
 
       <DragOverlay>
-        {activeTask ? <TaskCard task={activeTask} overlay /> : null}
+        {activeTask ? (
+          <TaskCard task={activeTask as unknown as TaskWithRelations} overlay />
+        ) : null}
       </DragOverlay>
     </DndContext>
   );

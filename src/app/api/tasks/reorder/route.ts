@@ -1,20 +1,28 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+type TxClient = Omit<
+  typeof db,
+  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+>;
+
+const reorderSchema = z.object({
+  taskId: z.string().min(1),
+  columnId: z.string().min(1),
+  position: z.number().int().min(0),
+});
 
 export async function PATCH(request: Request): Promise<NextResponse> {
   const body = await request.json();
-  const { taskId, columnId, position } = body as {
-    taskId: string;
-    columnId: string;
-    position: number;
-  };
-
-  if (!taskId || !columnId || position === undefined) {
+  const parsed = reorderSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "taskId, columnId and position are required" },
+      { error: "Invalid request body", details: parsed.error.flatten() },
       { status: 400 },
     );
   }
+  const { taskId, columnId, position } = parsed.data;
 
   const existing = await db.task.findUnique({
     where: { id: taskId },
@@ -27,7 +35,7 @@ export async function PATCH(request: Request): Promise<NextResponse> {
 
   const columnChanged = existing.columnId !== columnId;
 
-  await db.$transaction(async (tx: any) => {
+  await db.$transaction(async (tx: TxClient) => {
     // Shift tasks in destination column to make room
     await tx.task.updateMany({
       where: {

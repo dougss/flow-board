@@ -15,14 +15,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useBoardStore } from "@/store/board-store";
+import { useDeleteTask, useUpdateTask, useCreateTask } from "@/hooks/use-board";
 import type { TaskWithRelations, TaskType, TaskPriority } from "@/types";
 
 const TYPE_ICONS: Record<TaskType, React.ReactNode> = {
-  Bug: <Bug className="h-3 w-3" />,
-  Feature: <Sparkles className="h-3 w-3" />,
-  Task: <CheckSquare className="h-3 w-3" />,
-  Story: <FileText className="h-3 w-3" />,
-  Epic: <Zap className="h-3 w-3" />,
+  bug: <Bug className="h-3 w-3" />,
+  feature: <Sparkles className="h-3 w-3" />,
+  task: <CheckSquare className="h-3 w-3" />,
+  improvement: <FileText className="h-3 w-3" />,
+  "tech-debt": <Zap className="h-3 w-3" />,
+  investigation: <FileText className="h-3 w-3" />,
+  architecture: <Zap className="h-3 w-3" />,
+  integration: <FileText className="h-3 w-3" />,
+  infra: <CheckSquare className="h-3 w-3" />,
 };
 
 const PRIORITY_BORDER: Record<TaskPriority, string> = {
@@ -48,6 +53,9 @@ interface TaskCardProps {
 
 export function TaskCard({ task, overlay = false }: TaskCardProps) {
   const selectTask = useBoardStore((s) => s.selectTask);
+  const deleteTask = useDeleteTask(task.boardId);
+  const updateTask = useUpdateTask(task.boardId);
+  const createTask = useCreateTask(task.boardId);
 
   const {
     attributes,
@@ -66,16 +74,27 @@ export function TaskCard({ task, overlay = false }: TaskCardProps) {
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
 
   const handleChangePriority = (priority: TaskPriority) => {
-    // trigger via store or mutation — caller wires this up
-    console.log("change priority", task.id, priority);
+    updateTask.mutate({ taskId: task.id, data: { priority } });
   };
 
   const handleDelete = () => {
-    console.log("delete", task.id);
+    if (!confirm(`Delete "${task.title}"?`)) return;
+    deleteTask.mutate(task.id);
   };
 
   const handleDuplicate = () => {
-    console.log("duplicate", task.id);
+    createTask.mutate({
+      title: `Copy of ${task.title}`,
+      columnId: task.columnId,
+      boardId: task.boardId,
+      type: task.type,
+      priority: task.priority,
+      description: task.description ?? undefined,
+      storyPoints: task.storyPoints ?? undefined,
+      estimatedEffort: task.estimatedEffort ?? undefined,
+      assignedTo: task.assignedTo ?? undefined,
+      requestedBy: task.requestedBy ?? undefined,
+    });
   };
 
   return (

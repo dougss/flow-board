@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
 import { readdir, readFile } from "fs/promises";
 import { NextResponse } from "next/server";
-import path from "path";
+import os from "node:os";
+import path from "node:path";
 import yaml from "yaml";
 
 interface Frontmatter {
@@ -72,8 +73,17 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
-  const demandsDir = path.join(vaultPath, "01-Demands");
-  const projectsDir = path.join(vaultPath, "02-Projects");
+  const resolvedPath = path.resolve(vaultPath.replace(/^~/, os.homedir()));
+  const homeDir = os.homedir();
+  if (!resolvedPath.startsWith(homeDir)) {
+    return NextResponse.json(
+      { error: "Path must be within home directory" },
+      { status: 403 },
+    );
+  }
+
+  const demandsDir = path.join(resolvedPath, "01-Demands");
+  const projectsDir = path.join(resolvedPath, "02-Projects");
 
   const [demandFiles, projectFiles] = await Promise.all([
     readdir(demandsDir).catch(() => [] as string[]),

@@ -1,5 +1,20 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+const createTaskSchema = z.object({
+  boardId: z.string().min(1),
+  columnId: z.string().min(1),
+  title: z.string().min(1).max(500),
+  description: z.string().optional(),
+  type: z.string().default("task"),
+  priority: z.string().default("none"),
+  storyPoints: z.number().int().min(0).optional(),
+  estimatedEffort: z.string().optional(),
+  dueDate: z.string().optional(),
+  requestedBy: z.string().optional(),
+  assignedTo: z.string().optional(),
+});
 
 export async function GET(request: Request): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
@@ -41,6 +56,14 @@ export async function GET(request: Request): Promise<NextResponse> {
 
 export async function POST(request: Request): Promise<NextResponse> {
   const body = await request.json();
+  const parsed = createTaskSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid request body", details: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
   const {
     boardId,
     columnId,
@@ -53,14 +76,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     dueDate,
     requestedBy,
     assignedTo,
-  } = body;
-
-  if (!boardId || !columnId || !title) {
-    return NextResponse.json(
-      { error: "boardId, columnId and title are required" },
-      { status: 400 },
-    );
-  }
+  } = parsed.data;
 
   const column = await db.column.findUnique({
     where: { id: columnId },

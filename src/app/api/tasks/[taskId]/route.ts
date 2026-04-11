@@ -1,5 +1,26 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+type TxClient = Omit<
+  typeof db,
+  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+>;
+
+const patchTaskSchema = z.object({
+  columnId: z.string().min(1).optional(),
+  title: z.string().min(1).max(500).optional(),
+  description: z.string().nullable().optional(),
+  type: z.string().optional(),
+  priority: z.string().optional(),
+  storyPoints: z.number().int().min(0).nullable().optional(),
+  estimatedEffort: z.string().nullable().optional(),
+  dueDate: z.string().nullable().optional(),
+  requestedBy: z.string().nullable().optional(),
+  assignedTo: z.string().nullable().optional(),
+  completedAt: z.string().nullable().optional(),
+  labelIds: z.array(z.string()).optional(),
+});
 
 export async function GET(
   _request: Request,
@@ -42,6 +63,14 @@ export async function PATCH(
     return NextResponse.json({ error: "Task not found" }, { status: 404 });
   }
 
+  const parsed = patchTaskSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid request body", details: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+
   const {
     columnId,
     title,
@@ -55,7 +84,7 @@ export async function PATCH(
     assignedTo,
     completedAt,
     labelIds,
-  } = body;
+  } = parsed.data;
 
   const activityCreates: Array<{
     action: string;
@@ -105,11 +134,11 @@ export async function PATCH(
       action: "updated",
       field: "assignedTo",
       oldValue: existing.assignedTo ?? undefined,
-      newValue: assignedTo,
+      newValue: assignedTo ?? undefined,
     });
   }
 
-  const task = await db.$transaction(async (tx: any) => {
+  const task = await db.$transaction(async (tx: TxClient) => {
     if (labelIds !== undefined) {
       await tx.taskLabel.deleteMany({ where: { taskId } });
       if (labelIds.length > 0) {
@@ -162,7 +191,15 @@ export async function DELETE(
 ): Promise<NextResponse> {
   const { taskId } = await params;
 
-  await db.task.delete({ where: { id: taskId } });
+  try {
+    await db.task.delete({ where: { id: taskId } });
+  } catch (err: unknown) {
+    const code = (err as { code?: string })?.code;
+    if (code === "P2025") {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
+    throw err;
+  }
 
   return NextResponse.json({ success: true });
 }

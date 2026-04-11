@@ -12,7 +12,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
-  const comment = await db.$transaction(async (tx: any) => {
+  type TxClient = Omit<
+    typeof db,
+    "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+  >;
+  const comment = await db.$transaction(async (tx: TxClient) => {
     const created = await tx.comment.create({
       data: { taskId, content },
     });
