@@ -20,7 +20,6 @@ export type ProjectStatus = "active" | "archived" | "completed";
 export interface Workspace {
   id: string;
   name: string;
-  slug: string;
   description: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -31,11 +30,12 @@ export interface Project {
   id: string;
   workspaceId: string;
   name: string;
-  slug: string;
   description: string | null;
   status: ProjectStatus;
-  color: string | null;
-  icon: string | null;
+  owner: string | null;
+  team: string | null;
+  repos: string | null;
+  color: string;
   createdAt: Date;
   updatedAt: Date;
   workspace?: Workspace;
@@ -60,7 +60,7 @@ export interface Column {
   id: string;
   boardId: string;
   name: string;
-  color: string | null;
+  color: string;
   position: number;
   wipLimit: number | null;
   isCollapsed: boolean;

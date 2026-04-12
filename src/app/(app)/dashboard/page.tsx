@@ -18,6 +18,7 @@ import {
 import { BarChart3, AlertCircle, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboard } from "@/hooks/use-dashboard";
+import { ActivityFeed } from "@/components/dashboard/activity-feed";
 
 interface StatCardProps {
   label: string;
@@ -281,6 +282,9 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           )}
         </div>
+
+        {/* Activity feed */}
+        {boardId && <ActivityFeed boardId={boardId} />}
 
         {/* Overdue tasks */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">

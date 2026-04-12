@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutGrid,
@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/store/theme-store";
+import { CreateProjectPopover } from "@/components/layout/create-project-popover";
+import { CreateBoardPopover } from "@/components/layout/create-board-popover";
 
 interface Board {
   id: string;
@@ -35,30 +37,37 @@ interface SidebarProps {
   workspaceName?: string;
 }
 
+async function fetchProjects(workspaceId: string): Promise<Project[]> {
+  const res = await fetch(`/api/projects?workspaceId=${workspaceId}`);
+  if (!res.ok) throw new Error("Failed to fetch projects");
+  return res.json() as Promise<Project[]>;
+}
+
 export function Sidebar({
   workspaceId,
   workspaceName = "My Workspace",
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     new Set(),
   );
   const pathname = usePathname();
   const { theme, toggleTheme } = useThemeStore();
 
+  const { data: projects = [] } = useQuery({
+    queryKey: ["projects", workspaceId],
+    queryFn: () => fetchProjects(workspaceId!),
+    enabled: !!workspaceId,
+    staleTime: 30_000,
+  });
+
+  const initialized = useRef(false);
   useEffect(() => {
-    if (!workspaceId) return;
-    fetch(`/api/projects?workspaceId=${workspaceId}`)
-      .then((r) => r.json())
-      .then((data: Project[]) => {
-        setProjects(data);
-        if (data.length > 0) {
-          setExpandedProjects(new Set([data[0].id]));
-        }
-      })
-      .catch(() => {});
-  }, [workspaceId]);
+    if (!initialized.current && projects.length > 0) {
+      setExpandedProjects(new Set([projects[0].id]));
+      initialized.current = true;
+    }
+  }, [projects]);
 
   const toggleProject = (projectId: string) => {
     setExpandedProjects((prev) => {
@@ -130,6 +139,14 @@ export function Sidebar({
 
       {/* Projects list */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+        {!collapsed && workspaceId && (
+          <div className="flex items-center justify-between px-2 mb-1">
+            <span className="text-[10px] text-zinc-600 uppercase tracking-wide font-medium">
+              Projects
+            </span>
+            <CreateProjectPopover workspaceId={workspaceId} />
+          </div>
+        )}
         {projects.map((project) => {
           const isExpanded = expandedProjects.has(project.id);
           return (
@@ -152,6 +169,9 @@ export function Sidebar({
                     </motion.span>
                   )}
                 </AnimatePresence>
+                {!collapsed && isExpanded && (
+                  <CreateBoardPopover projectId={project.id} />
+                )}
               </button>
 
               <AnimatePresence>

@@ -8,6 +8,8 @@ describe("board-store", () => {
       selectedTaskId: null,
       isTaskDrawerOpen: false,
       isSearchOpen: false,
+      selectedTaskIds: new Set(),
+      isBulkMode: false,
       filters: {
         statuses: [],
         priorities: [],
@@ -62,5 +64,31 @@ describe("board-store", () => {
     expect(useBoardStore.getState().isSearchOpen).toBe(true);
     useBoardStore.getState().closeSearch();
     expect(useBoardStore.getState().isSearchOpen).toBe(false);
+  });
+
+  it("toggles task selection and enters bulk mode", () => {
+    useBoardStore.getState().toggleTaskSelection("task-1");
+    expect(useBoardStore.getState().selectedTaskIds.has("task-1")).toBe(true);
+    expect(useBoardStore.getState().isBulkMode).toBe(true);
+
+    useBoardStore.getState().toggleTaskSelection("task-2");
+    expect(useBoardStore.getState().selectedTaskIds.size).toBe(2);
+
+    useBoardStore.getState().toggleTaskSelection("task-1");
+    expect(useBoardStore.getState().selectedTaskIds.has("task-1")).toBe(false);
+    expect(useBoardStore.getState().selectedTaskIds.size).toBe(1);
+  });
+
+  it("selects all tasks", () => {
+    useBoardStore.getState().selectAllTasks(["a", "b", "c"]);
+    expect(useBoardStore.getState().selectedTaskIds.size).toBe(3);
+    expect(useBoardStore.getState().isBulkMode).toBe(true);
+  });
+
+  it("clears selection and exits bulk mode", () => {
+    useBoardStore.getState().toggleTaskSelection("task-1");
+    useBoardStore.getState().clearSelection();
+    expect(useBoardStore.getState().selectedTaskIds.size).toBe(0);
+    expect(useBoardStore.getState().isBulkMode).toBe(false);
   });
 });

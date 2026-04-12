@@ -53,6 +53,10 @@ interface TaskCardProps {
 
 export function TaskCard({ task, overlay = false }: TaskCardProps) {
   const selectTask = useBoardStore((s) => s.selectTask);
+  const isBulkMode = useBoardStore((s) => s.isBulkMode);
+  const selectedTaskIds = useBoardStore((s) => s.selectedTaskIds);
+  const toggleTaskSelection = useBoardStore((s) => s.toggleTaskSelection);
+  const isSelected = selectedTaskIds.has(task.id);
   const deleteTask = useDeleteTask(task.boardId);
   const updateTask = useUpdateTask(task.boardId);
   const createTask = useCreateTask(task.boardId);
@@ -110,7 +114,13 @@ export function TaskCard({ task, overlay = false }: TaskCardProps) {
           transition={{ duration: 0.15 }}
           {...attributes}
           {...listeners}
-          onClick={() => selectTask(task.id)}
+          onClick={() => {
+            if (isBulkMode) {
+              toggleTaskSelection(task.id);
+            } else {
+              selectTask(task.id);
+            }
+          }}
           className={cn(
             "group relative rounded-md border border-border bg-card p-3 shadow-sm cursor-pointer",
             "border-l-4 hover:shadow-md transition-shadow select-none",
@@ -118,8 +128,48 @@ export function TaskCard({ task, overlay = false }: TaskCardProps) {
               "border-l-transparent",
             overlay && "shadow-xl rotate-2 opacity-90",
             isDragging && "opacity-40",
+            isSelected && "ring-2 ring-indigo-500/50",
           )}
         >
+          {/* Bulk selection checkbox */}
+          <div
+            className={cn(
+              "absolute -top-1.5 -left-1.5 z-10 transition-opacity",
+              isBulkMode || isSelected
+                ? "opacity-100"
+                : "opacity-0 group-hover:opacity-100",
+            )}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleTaskSelection(task.id);
+              }}
+              className={cn(
+                "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
+                isSelected
+                  ? "bg-indigo-600 border-indigo-600 text-white"
+                  : "bg-zinc-900 border-zinc-600 hover:border-zinc-400",
+              )}
+            >
+              {isSelected && (
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
+
           {/* Type + Title */}
           <div className="flex items-start gap-1.5 mb-2">
             <span className="mt-0.5 shrink-0 text-muted-foreground">

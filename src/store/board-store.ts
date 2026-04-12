@@ -30,12 +30,17 @@ interface BoardState {
   selectedTaskId: string | null;
   isTaskDrawerOpen: boolean;
   isSearchOpen: boolean;
+  selectedTaskIds: Set<string>;
+  isBulkMode: boolean;
   filters: Filters;
   setActiveView: (view: ViewType) => void;
   selectTask: (taskId: string) => void;
   closeTaskDrawer: () => void;
   openSearch: () => void;
   closeSearch: () => void;
+  toggleTaskSelection: (taskId: string) => void;
+  selectAllTasks: (taskIds: string[]) => void;
+  clearSelection: () => void;
   updateFilters: (partial: Partial<Filters>) => void;
   resetFilters: () => void;
 }
@@ -45,6 +50,8 @@ export const useBoardStore = create<BoardState>((set) => ({
   selectedTaskId: null,
   isTaskDrawerOpen: false,
   isSearchOpen: false,
+  selectedTaskIds: new Set(),
+  isBulkMode: false,
   filters: defaultFilters,
 
   setActiveView: (view) => set({ activeView: view }),
@@ -57,6 +64,19 @@ export const useBoardStore = create<BoardState>((set) => ({
   openSearch: () => set({ isSearchOpen: true }),
 
   closeSearch: () => set({ isSearchOpen: false }),
+
+  toggleTaskSelection: (taskId) =>
+    set((state) => {
+      const next = new Set(state.selectedTaskIds);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return { selectedTaskIds: next, isBulkMode: next.size > 0 };
+    }),
+
+  selectAllTasks: (taskIds) =>
+    set({ selectedTaskIds: new Set(taskIds), isBulkMode: taskIds.length > 0 }),
+
+  clearSelection: () => set({ selectedTaskIds: new Set(), isBulkMode: false }),
 
   updateFilters: (partial) =>
     set((state) => ({ filters: { ...state.filters, ...partial } })),

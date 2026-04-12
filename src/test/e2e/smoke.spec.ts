@@ -28,6 +28,12 @@ test.describe("smoke tests", () => {
     await expect(page.locator("text=Vault Path")).toBeVisible();
   });
 
+  test("settings page loads", async ({ page }) => {
+    await page.goto("/settings");
+    await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+    await expect(page.locator("text=Keyboard Shortcuts")).toBeVisible();
+  });
+
   test("Cmd+K opens search dialog", async ({ page }) => {
     await page.goto("/dashboard");
     await page.waitForLoadState("networkidle");

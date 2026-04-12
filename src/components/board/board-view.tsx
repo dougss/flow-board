@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Column } from "./column";
 import { TaskCard } from "./task-card";
 import { useBoardQuery, useReorderTask } from "@/hooks/use-board";
+import { BulkActionBar } from "./bulk-action-bar";
 import type { TaskWithRelations } from "@/types";
 
 type BoardTask = {
@@ -195,6 +196,8 @@ export function BoardView({ boardId }: BoardViewProps) {
           <TaskCard task={activeTask as unknown as TaskWithRelations} overlay />
         ) : null}
       </DragOverlay>
+
+      <BulkActionBar boardId={boardId} />
     </DndContext>
   );
 }

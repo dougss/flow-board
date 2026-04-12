@@ -12,8 +12,10 @@ export function KeyboardShortcutsProvider({
 }): React.ReactElement {
   const {
     isSearchOpen,
+    isBulkMode,
     openSearch,
     closeSearch,
+    clearSelection,
     setActiveView,
     closeTaskDrawer,
   } = useBoardStore();
@@ -24,8 +26,12 @@ export function KeyboardShortcutsProvider({
       closeSearch();
       return;
     }
+    if (isBulkMode) {
+      clearSelection();
+      return;
+    }
     closeTaskDrawer();
-  }, [closeTaskDrawer, closeSearch, isSearchOpen]);
+  }, [closeTaskDrawer, closeSearch, clearSelection, isSearchOpen, isBulkMode]);
 
   useKeyboardShortcuts({
     onSearch,

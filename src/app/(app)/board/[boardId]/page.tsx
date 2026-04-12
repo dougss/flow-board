@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { Header } from "@/components/layout/header";
 import { ViewSwitcher } from "@/components/layout/view-switcher";
 import { TaskDrawer } from "@/components/task/task-drawer";
+import { TaskUrlSync } from "@/components/board/task-url-sync";
 
 interface BoardPageProps {
   params: Promise<{ boardId: string }>;
@@ -29,6 +31,9 @@ export default async function BoardPage({ params }: BoardPageProps) {
         <ViewSwitcher boardId={boardId} />
       </div>
       <TaskDrawer boardId={boardId} />
+      <Suspense>
+        <TaskUrlSync />
+      </Suspense>
     </div>
   );
 }
