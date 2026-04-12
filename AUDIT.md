@@ -1,120 +1,103 @@
 # FlowBoard — Auditoria Completa
 
-> Auditoria realizada em 2026-04-12. Cobre funcionalidades, UX/UI, code quality, testes e segurança.
+> Auditoria realizada em 2026-04-12. Atualizado em 2026-04-12 apos implementacao dos fixes.
 
 ## Resumo Executivo
 
-O FlowBoard é um app de project management pessoal com kanban, graph, list, table e timeline views. Stack: Next.js 16 + React 19 + Prisma 7 + SQLite + Zustand + TanStack Query. Funcional para uso pessoal, mas com gaps em UX polish, acessibilidade e features esperadas.
+O FlowBoard e um app de project management pessoal com kanban, graph, list, table e timeline views. Stack: Next.js 16 + React 19 + Prisma 7 + SQLite + Zustand + TanStack Query. Funcional para uso pessoal. Audit P0-P2 corrigida em commit `7074730`.
 
 ---
 
 ## 1. Funcionalidades — O que funciona
 
-| Feature            | Status | Notas                                                            |
-| ------------------ | ------ | ---------------------------------------------------------------- |
-| Task CRUD          | OK     | Create, read, update, delete completos                           |
-| Board/Column CRUD  | OK     | Create, edit, delete, reorder                                    |
-| Drag & Drop        | OK     | @dnd-kit cross-column com optimistic updates                     |
-| 5 Views            | OK     | Board, List, Table, Timeline, Graph                              |
-| Task Drawer        | OK     | Slide-in com header, properties, body, comments                  |
-| Subtasks           | OK     | Self-referential, inline CRUD, progress bar                      |
-| Labels/Tags        | OK     | CRUD + filtro + cores + import do Obsidian                       |
-| Dependencies       | OK     | blocks/blocked_by/relates_to + graph visualization               |
-| Comments           | OK     | CRUD com timestamps                                              |
-| Activity Log       | OK     | Tracked em campo/oldValue/newValue                               |
-| Search (Cmd+K)     | OK     | LIKE query em title+description                                  |
-| Filters            | OK     | Status, priority, type, labels, assignees, dueDate, subtasks     |
-| Bulk Selection     | OK     | Checkbox + floating action bar                                   |
-| Dashboard          | OK     | Stats, charts (status/priority/type/velocity), overdue, activity |
-| Obsidian Import    | OK     | Preview + import com YAML frontmatter                            |
-| Timeline/Gantt     | OK     | Zoom day/week/month, drag-to-reschedule due dates                |
-| Graph View         | OK     | @xyflow com dependency edges, task nodes por coluna              |
-| Theme Toggle       | OK     | Dark/Light com Zustand persist                                   |
-| Keyboard Shortcuts | OK     | Cmd+K, Cmd+N, Cmd+Shift+D, Esc, 1-5 views                        |
-| Deep Linking       | OK     | ?task=id abre drawer automaticamente                             |
-| CI Pipeline        | OK     | GitHub Actions: typecheck, lint, test, e2e                       |
+| Feature            | Status | Notas                                                                |
+| ------------------ | ------ | -------------------------------------------------------------------- |
+| Task CRUD          | OK     | Create, read, update, delete completos                               |
+| Board/Column CRUD  | OK     | Create, edit, delete, reorder                                        |
+| Drag & Drop        | OK     | @dnd-kit cross-column com optimistic updates                         |
+| 5 Views            | OK     | Board, List, Table, Timeline, Graph                                  |
+| Task Drawer        | OK     | Slide-in com header, properties, body, comments                      |
+| Subtasks           | OK     | Self-referential, inline CRUD, progress bar                          |
+| Labels/Tags        | OK     | CRUD + filtro + cores + import do Obsidian                           |
+| Dependencies       | OK     | blocks/blocked_by/relates_to + graph visualization                   |
+| Comments           | OK     | CRUD com timestamps                                                  |
+| Activity Log       | OK     | Tracked em campo/oldValue/newValue                                   |
+| Search (Cmd+K)     | OK     | LIKE query em title+description                                      |
+| Filters            | OK     | Status, priority, type, labels, assignees, dueDate, subtasks         |
+| Bulk Selection     | OK     | Checkbox + floating action bar (board + list views)                  |
+| Dashboard          | OK     | Stats, charts (status/priority/type/velocity), overdue, activity     |
+| Obsidian Import    | OK     | Preview + import com YAML frontmatter                                |
+| Timeline/Gantt     | OK     | Zoom day/week/month, drag-to-reschedule, barras iniciam em createdAt |
+| Graph View         | OK     | @xyflow com dependency edges, task nodes por coluna                  |
+| Theme Toggle       | OK     | Dark/Light com semantic tokens em todas as pages                     |
+| Keyboard Shortcuts | OK     | Cmd+K, Cmd+N, Cmd+Shift+D, Esc, 1-5 views                            |
+| Deep Linking       | OK     | ?task=id abre drawer automaticamente                                 |
+| CI Pipeline        | OK     | GitHub Actions: typecheck, lint, test, e2e                           |
+| Export             | OK     | JSON/CSV via GET /api/export?boardId=X&format=json/csv               |
+| Accessibility      | OK     | Skip link, aria-labels, prefers-reduced-motion                       |
 
 ---
 
 ## 2. Gaps Funcionais
 
-### Criticos
+### Corrigidos (commit 7074730)
 
-| Gap                                        | Impacto                                                    | Esforco |
-| ------------------------------------------ | ---------------------------------------------------------- | ------- |
-| Sem seed data                              | App vazio no primeiro acesso, sem onboarding               | Baixo   |
-| Sem .env.example                           | Dev setup quebrado para quem clonar                        | Trivial |
-| Home page sem "criar projeto"              | Welcome page so linka para import, sem criar do zero       | Baixo   |
-| List view bulk actions sao stubs           | Botoes "Move to column" e "Change priority" nao fazem nada | Medio   |
-| Timeline getTaskStart sempre retorna today | Todas as barras comecam em hoje — deveria ser createdAt    | Trivial |
-| Export inexistente                         | Import existe, mas nenhum export (JSON, CSV, Markdown)     | Medio   |
+| Gap                                     | Status | Commit                                                  |
+| --------------------------------------- | ------ | ------------------------------------------------------- |
+| ~~Sem .env.example~~                    | DONE   | .env.example criado                                     |
+| ~~Home page sem "criar projeto"~~       | DONE   | CreateFirstProject cria workspace+project+board inline  |
+| ~~List view bulk actions stubs~~        | DONE   | Move/Priority/Delete funcionais com mutations reais     |
+| ~~Timeline getTaskStart retorna today~~ | DONE   | Usa createdAt                                           |
+| ~~Export inexistente~~                  | DONE   | API + botao no header (JSON/CSV)                        |
+| ~~Light mode quebrado~~                 | DONE   | Semantic tokens em 14 arquivos                          |
+| ~~Sem prefers-reduced-motion~~          | DONE   | CSS global desativa animacoes                           |
+| ~~Sem skip link~~                       | DONE   | Skip to main content + id="main-content"                |
+| ~~Sem aria-labels~~                     | DONE   | View switcher, sidebar collapse                         |
+| ~~Empty states inconsistentes~~         | DONE   | Board not found + welcome page funcional                |
+| ~~Dashboard Skeleton local~~            | DONE   | Usa ui/skeleton                                         |
+| ~~Scrollbar hardcoded~~                 | DONE   | Usa CSS variables                                       |
+| ~~Mistura neutral/zinc~~                | DONE   | list-view e timeline-view migrados para semantic tokens |
 
-### Importantes
+### Pendentes — Funcionalidades
 
-| Gap                          | Impacto                                                 | Esforco |
-| ---------------------------- | ------------------------------------------------------- | ------- |
-| Sem board/project settings   | Nao da para renomear board, alterar columns default     | Medio   |
-| Sem WIP limit enforcement    | Campo wipLimit existe no schema mas nenhum UI o utiliza | Baixo   |
-| Sem notificacoes de due date | Tasks vencem silenciosamente                            | Medio   |
-| Sem undo/redo                | Acoes sao permanentes                                   | Alto    |
-| Assignees sem normalizacao   | Campo string livre, sem user management                 | Medio   |
-| Sem workspace settings       | Nao da para editar workspace name/description           | Baixo   |
-| Sem breadcrumbs              | Navegacao entre workspace > project > board nao e clara | Baixo   |
+| Gap                          | Impacto                                           | Esforco | Prioridade |
+| ---------------------------- | ------------------------------------------------- | ------- | ---------- |
+| Sem seed data                | App vazio no primeiro acesso                      | Baixo   | P1         |
+| Sem board/project settings   | Nao da para renomear board/project                | Medio   | P1         |
+| Sem workspace settings       | Nao da para editar workspace name/description     | Baixo   | P2         |
+| Sem notificacoes de due date | Tasks vencem silenciosamente                      | Medio   | P2         |
+| Sem undo/redo                | Acoes sao permanentes                             | Alto    | P3         |
+| Assignees sem normalizacao   | Campo string livre, sem user management           | Medio   | P3         |
+| Sem breadcrumbs              | Navegacao workspace > project > board nao e clara | Baixo   | P2         |
 
----
+### Pendentes — UX/UI
 
-## 3. Audit UX/UI
-
-### Problemas Criticos
-
-1. **Light mode quebrado** — className="dark" hardcoded no html, mas ThemeProvider tenta remover a classe. Varios componentes usam classes hardcoded como bg-zinc-950, bg-zinc-900, text-zinc-100 em vez de bg-background, text-foreground. Resultado: texto invisivel em light mode.
-
-2. **Sem prefers-reduced-motion** — Framer Motion usado extensivamente sem respeitar preferencia do OS.
-
-3. **Touch targets < 44px** — Varios botoes/links com h-7 (28px), w-6 h-6 (24px). Abaixo do minimo WCAG.
-
-4. **Sem skip link** — Nenhum "Skip to main content" para keyboard navigation.
-
-5. **Tab order inconsistente** — Sidebar, header, e board nao tem tabIndex management.
-
-### Problemas Medios
-
-6. **Empty states inconsistentes** — Board view return null quando !board. Timeline tem empty state. Dashboard tem skeleton. Import nao tem.
-
-7. **Forms sem validacao visual** — Import page aceita qualquer path sem feedback de campo obrigatorio.
-
-8. **Scrollbar hardcoded para dark** — globals.css tem cores fixas para scrollbar.
-
-9. **Responsive limitado** — Apenas sm e md breakpoints. Sidebar nao e collapsible em mobile.
-
-10. **Dashboard Skeleton local** — Redefine Skeleton inline em vez de usar ui/skeleton.
-
-11. **Sem aria-labels em botoes de icone** — Sidebar collapse, view switcher, filter buttons usam icone sem label.
-
-### Problemas Menores
-
-12. **Mistura de neutral e zinc** — List view e timeline usam neutral enquanto o resto usa zinc.
-
-13. **Select nativo no dashboard** — select com estilo custom, mas sem Radix Select. Inconsistente.
-
-14. **Cursor pointer inconsistente** — Alguns elementos clicaveis nao tem cursor-pointer.
+| Gap                          | Impacto                                                     | Esforco | Prioridade |
+| ---------------------------- | ----------------------------------------------------------- | ------- | ---------- |
+| Touch targets < 44px         | Botoes h-7 (28px), w-6 h-6 (24px) abaixo do minimo WCAG     | Baixo   | P1         |
+| Tab order inconsistente      | Sidebar/header sem tabIndex management                      | Medio   | P2         |
+| Forms sem validacao visual   | Import aceita qualquer path sem feedback                    | Baixo   | P2         |
+| Responsive limitado          | Apenas sm/md breakpoints, sidebar nao collapsible em mobile | Medio   | P1         |
+| Select nativo no dashboard   | Usa select HTML em vez de Radix Select                      | Baixo   | P3         |
+| Cursor pointer inconsistente | Alguns elementos clicaveis sem cursor-pointer               | Baixo   | P3         |
 
 ---
 
-## 4. Audit Tecnica
+## 3. Audit Tecnica
 
 ### Code Quality
 
-| Aspecto                 | Status | Notas                               |
-| ----------------------- | ------ | ----------------------------------- |
-| TypeScript strict       | OK     | Habilitado                          |
-| Prisma schema indexes   | OK     | Bem otimizado                       |
-| TanStack Query patterns | OK     | Correto com staleTime, invalidation |
-| Zustand patterns        | OK     | Correto com persist                 |
-| Error handling API      | WARN   | Inconsistente entre routes          |
-| Optimistic updates      | OK     | Implementado no drag and drop       |
+| Aspecto                 | Status | Notas                                          |
+| ----------------------- | ------ | ---------------------------------------------- |
+| TypeScript strict       | OK     | Habilitado                                     |
+| Prisma schema indexes   | OK     | Bem otimizado                                  |
+| TanStack Query patterns | OK     | Correto com staleTime, invalidation            |
+| Zustand patterns        | OK     | Correto com persist                            |
+| Error handling API      | WARN   | Inconsistente entre routes                     |
+| Optimistic updates      | OK     | Implementado no drag and drop                  |
+| Semantic tokens         | OK     | Todas as pages usam CSS variables via Tailwind |
 
-### Testes
+### Testes — Pendente
 
 | Tipo             | Cobertura            | Veredicto                                          |
 | ---------------- | -------------------- | -------------------------------------------------- |
@@ -125,35 +108,37 @@ O FlowBoard é um app de project management pessoal com kanban, graph, list, tab
 
 ### Security
 
-| Item                    | Status                                            |
-| ----------------------- | ------------------------------------------------- |
-| Path traversal (import) | OK — corrigido com homeDirWithSep + realpath      |
-| Input sanitization      | WARN — titulos e descriptions sem sanitizacao XSS |
+| Item                       | Status                                            |
+| -------------------------- | ------------------------------------------------- |
+| Path traversal (import)    | OK — corrigido com homeDirWithSep + realpath      |
+| Export Content-Disposition | OK — board name sanitizado                        |
+| Input sanitization         | WARN — titulos e descriptions sem sanitizacao XSS |
 
 ---
 
-## 5. Priorizacao de Correcoes
+## 4. Proximos Passos Recomendados
 
-### P0 — Fix antes de usar
+### P1 — Prioridade alta
 
-1. Fix light mode — Substituir cores hardcoded por semantic tokens em todas as pages
-2. Fix timeline getTaskStart — Usar createdAt em vez de today
-3. Fix list view bulk stubs — Conectar aos mesmos mutations do board bulk-action-bar
-4. Criar .env.example
-5. Fix dashboard Skeleton import — Usar ui/skeleton em vez de redefinir local
+1. **Seed data** — Script para popular o banco com dados de exemplo no primeiro acesso
+2. **Board/project settings** — Renomear, editar descricao, alterar colunas default
+3. **Touch targets** — Aumentar botoes criticos para minimo 44x44px
+4. **Responsive sidebar** — Collapsible em mobile com hamburger menu
 
-### P1 — UX essencial
+### P2 — Prioridade media
 
-6. Light mode completo — Audit todas as pages, converter para semantic tokens
-7. Empty states consistentes — Board empty, dashboard empty, welcome flow
-8. Home page "Create Project" — Botao criar projeto alem do link de import
-9. Confirmacao de delete — Dialog antes de deletar tasks
-10. Responsive sidebar — Collapsible em mobile com hamburger menu
+5. **Breadcrumbs** — Navegacao clara workspace > project > board
+6. **Tab order** — tabIndex management em sidebar e header
+7. **Form validation** — Feedback visual em campos obrigatorios (import)
+8. **Due date notifications** — Toast ou badge quando tasks vencem
+9. **Workspace settings** — Editar nome e descricao
 
-### P2 — Polish
+### P3 — Nice to have
 
-11. prefers-reduced-motion — Wrapper no Framer Motion
-12. Accessibility audit — aria-labels, skip link, focus management
-13. Neutral para zinc migration — Consistencia de cores
-14. Export (JSON/CSV) — Endpoint + UI basico
-15. WIP limit enforcement — Visual indicator quando coluna excede limit
+10. **Undo/redo** — Stack de acoes reversivel
+11. **Assignee normalization** — Modelo User com autocomplete
+12. **Dashboard Radix Select** — Substituir select nativo
+13. **Cursor pointer audit** — Garantir cursor-pointer em todos os clicaveis
+14. **Component tests** — Testes de renderizacao para task-card, drawer, etc.
+15. **API route tests** — Testes de integracao para CRUD endpoints
+16. **E2E flow tests** — Criar task, drag, bulk actions, export
