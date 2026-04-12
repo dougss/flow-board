@@ -12,7 +12,9 @@ import {
   SlidersHorizontal,
   Download,
   Settings2,
+  ChevronRight,
 } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useBoardStore } from "@/store/board-store";
 import { NewTaskDialog } from "@/components/board/new-task-dialog";
@@ -23,6 +25,7 @@ import type { ViewType } from "@/types";
 interface HeaderProps {
   boardId?: string;
   title: string;
+  workspaceName?: string;
   projectName?: string;
   projectId?: string;
   boardDescription?: string | null;
@@ -43,6 +46,7 @@ const views: {
 export function Header({
   boardId,
   title,
+  workspaceName,
   projectName,
   projectId,
   boardDescription,
@@ -59,17 +63,31 @@ export function Header({
   return (
     <header className="h-14 flex items-center gap-4 px-4 border-b border-border bg-background flex-shrink-0">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-sm min-w-0">
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-1 text-sm min-w-0"
+      >
+        {workspaceName && (
+          <>
+            <Link
+              href="/dashboard"
+              className="text-muted-foreground hover:text-foreground truncate transition-colors hidden sm:inline max-w-[120px]"
+            >
+              {workspaceName}
+            </Link>
+            <ChevronRight className="w-3 h-3 text-muted-foreground/40 flex-shrink-0 hidden sm:block" />
+          </>
+        )}
         {projectName && (
           <>
-            <span className="text-muted-foreground truncate">
+            <span className="text-muted-foreground truncate max-w-[140px]">
               {projectName}
             </span>
-            <span className="text-border">/</span>
+            <ChevronRight className="w-3 h-3 text-muted-foreground/40 flex-shrink-0" />
           </>
         )}
         <span className="text-foreground font-medium truncate">{title}</span>
-      </div>
+      </nav>
 
       <div className="flex-1" />
 

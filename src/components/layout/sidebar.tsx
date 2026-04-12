@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/store/theme-store";
 import { CreateProjectPopover } from "@/components/layout/create-project-popover";
 import { CreateBoardPopover } from "@/components/layout/create-board-popover";
+import { WorkspaceSettingsDialog } from "@/components/layout/workspace-settings-dialog";
 
 interface Board {
   id: string;
@@ -37,6 +38,7 @@ interface Project {
 interface SidebarProps {
   workspaceId?: string;
   workspaceName?: string;
+  workspaceDescription?: string | null;
 }
 
 async function fetchProjects(workspaceId: string): Promise<Project[]> {
@@ -48,9 +50,11 @@ async function fetchProjects(workspaceId: string): Promise<Project[]> {
 export function Sidebar({
   workspaceId,
   workspaceName = "My Workspace",
+  workspaceDescription,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [wsSettingsOpen, setWsSettingsOpen] = useState(false);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     new Set(),
   );
@@ -127,7 +131,10 @@ export function Sidebar({
 
       {/* Workspace */}
       <div className="px-3 py-3 border-b border-border">
-        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-card">
+        <button
+          onClick={() => workspaceId && setWsSettingsOpen(true)}
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md bg-card hover:bg-accent/60 transition-colors cursor-pointer"
+        >
           <div className="w-5 h-5 rounded bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
             <span className="text-indigo-400 text-xs font-bold">
               {workspaceName.charAt(0).toUpperCase()}
@@ -146,11 +153,24 @@ export function Sidebar({
               </motion.span>
             )}
           </AnimatePresence>
-        </div>
+        </button>
+
+        {workspaceId && (
+          <WorkspaceSettingsDialog
+            workspaceId={workspaceId}
+            workspaceName={workspaceName}
+            workspaceDescription={workspaceDescription}
+            open={wsSettingsOpen}
+            onOpenChange={setWsSettingsOpen}
+          />
+        )}
       </div>
 
       {/* Projects list */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
+      <nav
+        aria-label="Projects"
+        className="flex-1 overflow-y-auto py-3 px-2 space-y-1"
+      >
         {!collapsed && workspaceId && (
           <div className="flex items-center justify-between px-2 mb-1">
             <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide font-medium">
@@ -222,7 +242,10 @@ export function Sidebar({
       </nav>
 
       {/* Bottom links */}
-      <div className="border-t border-border py-3 px-2 space-y-1">
+      <nav
+        aria-label="Utilities"
+        className="border-t border-border py-3 px-2 space-y-1"
+      >
         {bottomLinks.map(({ href, icon: Icon, label }) => {
           const isActive = pathname === href;
           return (
@@ -304,7 +327,7 @@ export function Sidebar({
             )}
           </AnimatePresence>
         </button>
-      </div>
+      </nav>
     </motion.aside>
   );
 

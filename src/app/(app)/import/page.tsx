@@ -52,8 +52,24 @@ export default function ImportPage() {
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<PreviewData | null>(null);
+  const [touched, setTouched] = useState({
+    vaultPath: false,
+    workspaceName: false,
+  });
+
+  const vaultPathError =
+    touched.vaultPath && !vaultPath.trim() ? "Vault path is required" : null;
+  const workspaceNameError =
+    touched.workspaceName && !workspaceName.trim()
+      ? "Workspace name is required"
+      : null;
 
   const handlePreview = async () => {
+    setTouched({ vaultPath: true, workspaceName: true });
+    if (!vaultPath.trim()) {
+      setPreview(null);
+      return;
+    }
     setStatus("previewing");
     setPreview(null);
     try {
@@ -79,6 +95,8 @@ export default function ImportPage() {
   };
 
   const handleImport = async () => {
+    setTouched({ vaultPath: true, workspaceName: true });
+    if (!vaultPath.trim() || !workspaceName.trim()) return;
     setStatus("importing");
     setProgress(0);
     setError("");
@@ -131,9 +149,16 @@ export default function ImportPage() {
               type="text"
               value={vaultPath}
               onChange={(e) => setVaultPath(e.target.value)}
+              onBlur={() => setTouched((t) => ({ ...t, vaultPath: true }))}
               disabled={status === "importing"}
-              className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-indigo-500 disabled:opacity-50 font-mono"
+              className={cn(
+                "w-full bg-secondary border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-indigo-500 disabled:opacity-50 font-mono",
+                vaultPathError ? "border-red-500" : "border-border",
+              )}
             />
+            {vaultPathError && (
+              <p className="text-red-500 text-xs">{vaultPathError}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -144,9 +169,16 @@ export default function ImportPage() {
               type="text"
               value={workspaceName}
               onChange={(e) => setWorkspaceName(e.target.value)}
+              onBlur={() => setTouched((t) => ({ ...t, workspaceName: true }))}
               disabled={status === "importing"}
-              className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+              className={cn(
+                "w-full bg-secondary border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-indigo-500 disabled:opacity-50",
+                workspaceNameError ? "border-red-500" : "border-border",
+              )}
             />
+            {workspaceNameError && (
+              <p className="text-red-500 text-xs">{workspaceNameError}</p>
+            )}
           </div>
 
           <div className="flex items-center gap-3 pt-2">

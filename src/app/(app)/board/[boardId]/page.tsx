@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { ViewSwitcher } from "@/components/layout/view-switcher";
 import { TaskDrawer } from "@/components/task/task-drawer";
 import { TaskUrlSync } from "@/components/board/task-url-sync";
+import { DueDateNotifier } from "@/components/board/due-date-notifier";
 
 interface BoardPageProps {
   params: Promise<{ boardId: string }>;
@@ -15,7 +16,15 @@ export default async function BoardPage({ params }: BoardPageProps) {
 
   const board = await db.board.findUnique({
     where: { id: boardId },
-    include: { project: { select: { id: true, name: true } } },
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+          workspace: { select: { name: true } },
+        },
+      },
+    },
   });
 
   if (!board) notFound();
@@ -25,6 +34,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
       <Header
         boardId={boardId}
         title={board.name}
+        workspaceName={board.project.workspace?.name}
         projectName={board.project.name}
         projectId={board.project.id}
         boardDescription={board.description}
@@ -33,6 +43,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
         <ViewSwitcher boardId={boardId} />
       </div>
       <TaskDrawer boardId={boardId} />
+      <DueDateNotifier boardId={boardId} />
       <Suspense>
         <TaskUrlSync />
       </Suspense>

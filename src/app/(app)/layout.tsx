@@ -16,6 +16,7 @@ export default async function AppLayout({
       <Sidebar
         workspaceId={workspace?.id}
         workspaceName={workspace?.name ?? "My Workspace"}
+        workspaceDescription={workspace?.description}
       />
       <KeyboardShortcutsProvider>
         <div
