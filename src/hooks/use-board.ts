@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useUndoStore } from "@/store/undo-store";
 import type { BoardWithColumns } from "@/types";
 
 // ─── Query key factory ───────────────────────────────────────────────────────
@@ -52,6 +53,7 @@ export function useCreateTask(boardId: string) {
 
 export function useUpdateTask(boardId: string) {
   const queryClient = useQueryClient();
+  const pushUndo = useUndoStore((s) => s.push);
 
   return useMutation({
     mutationFn: async ({
@@ -61,13 +63,48 @@ export function useUpdateTask(boardId: string) {
       taskId: string;
       data: Record<string, unknown>;
     }) => {
+      // Fetch current state for undo
+      const prevRes = await fetch(`/api/tasks/${taskId}`);
+      const prevTask = prevRes.ok ? await prevRes.json() : null;
+
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed to update task");
-      return res.json();
+      const updated = await res.json();
+
+      // Build undo data from previous values
+      if (prevTask) {
+        const undoData: Record<string, unknown> = {};
+        for (const key of Object.keys(data)) {
+          if (key in prevTask) undoData[key] = prevTask[key];
+        }
+        pushUndo({
+          label: `Update ${prevTask.title}`,
+          undo: async () => {
+            await fetch(`/api/tasks/${taskId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(undoData),
+            });
+            queryClient.invalidateQueries({ queryKey: boardKey(boardId) });
+            toast.info("Action undone");
+          },
+          redo: async () => {
+            await fetch(`/api/tasks/${taskId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+            queryClient.invalidateQueries({ queryKey: boardKey(boardId) });
+            toast.info("Action redone");
+          },
+        });
+      }
+
+      return updated;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: boardKey(boardId) });

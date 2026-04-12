@@ -82,6 +82,17 @@
   }
 }
 
+/* ── Interactive cursor ── */
+
+button,
+[role="button"],
+a[href],
+select,
+summary,
+[tabindex]:not([tabindex="-1"]) {
+  cursor: pointer;
+}
+
 /* ── Base ── */
 
 body {

@@ -14,6 +14,8 @@ interface KeyboardShortcutCallbacks {
   onSearch?: () => void;
   onNewTask?: () => void;
   onEscape?: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
   onViewChange?: (view: ViewType) => void;
 }
 
@@ -45,6 +47,16 @@ export function useKeyboardShortcuts(
 
       if (e.key === "Escape") {
         callbacks.onEscape?.();
+        return;
+      }
+
+      if (isMeta && e.key.toLowerCase() === "z" && !isInputFocused()) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          callbacks.onRedo?.();
+        } else {
+          callbacks.onUndo?.();
+        }
         return;
       }
 

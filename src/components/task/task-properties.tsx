@@ -122,9 +122,8 @@ export function TaskProperties({ task, boardId }: TaskPropertiesProps) {
       </Row>
 
       <Row label="Assignee">
-        <InlineTextInput
+        <AssigneeInput
           value={task.assignedTo ?? ""}
-          placeholder="Unassigned"
           onSave={(v) => save({ assignedTo: v || null })}
         />
       </Row>
@@ -218,6 +217,66 @@ function InlineTextInput({ value, placeholder, onSave }: InlineTextInputProps) {
       onChange={(e) => setDraft(e.target.value)}
       onBlur={() => onSave(draft)}
     />
+  );
+}
+
+interface AssigneeInputProps {
+  value: string;
+  onSave: (value: string) => void;
+}
+
+function AssigneeInput({ value, onSave }: AssigneeInputProps) {
+  const [draft, setDraft] = useState(value);
+  const [open, setOpen] = useState(false);
+  const { data: suggestions = [] } = useQuery<string[]>({
+    queryKey: ["assignees"],
+    queryFn: async () => {
+      const res = await fetch("/api/assignees");
+      if (!res.ok) return [];
+      return res.json();
+    },
+    staleTime: 60_000,
+  });
+
+  const filtered = draft
+    ? suggestions.filter((s) => s.toLowerCase().includes(draft.toLowerCase()))
+    : suggestions;
+
+  return (
+    <div className="relative">
+      <input
+        className="w-full rounded border-none bg-transparent px-1 py-0.5 text-sm outline-none hover:bg-muted/40 focus:bg-background focus:ring-1 focus:ring-ring"
+        value={draft}
+        placeholder="Unassigned"
+        onChange={(e) => {
+          setDraft(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => {
+          setTimeout(() => setOpen(false), 150);
+          onSave(draft);
+        }}
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-32 overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-md">
+          {filtered.map((name) => (
+            <button
+              key={name}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                setDraft(name);
+                onSave(name);
+                setOpen(false);
+              }}
+              className="w-full text-left rounded px-2 py-1 text-xs hover:bg-accent transition-colors"
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

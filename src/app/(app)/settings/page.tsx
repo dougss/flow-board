@@ -51,6 +51,8 @@ export default function SettingsPage() {
             {[
               { keys: "⌘K", desc: "Search tasks" },
               { keys: "⌘N", desc: "New task" },
+              { keys: "⌘Z", desc: "Undo last action" },
+              { keys: "⌘⇧Z", desc: "Redo last action" },
               { keys: "⌘⇧D", desc: "Toggle theme" },
               { keys: "Esc", desc: "Close dialog / drawer" },
               {

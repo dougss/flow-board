@@ -15,8 +15,15 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { BarChart3, AlertCircle, ChevronDown } from "lucide-react";
+import { BarChart3, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 
@@ -53,19 +60,19 @@ export default function DashboardPage() {
       <div className="flex items-center gap-4 px-6 py-4 border-b border-border flex-shrink-0">
         <BarChart3 className="w-5 h-5 text-indigo-400" />
         <h1 className="text-foreground font-semibold text-lg">Dashboard</h1>
-        <div className="ml-auto relative">
-          <select
-            value={boardId}
-            onChange={(e) => setBoardId(e.target.value)}
-            className="appearance-none bg-card border border-border rounded-md px-3 py-1.5 pr-8 text-xs text-foreground focus:outline-none focus:border-indigo-500 w-56 cursor-pointer"
-          >
-            {boards.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+        <div className="ml-auto">
+          <Select value={boardId} onValueChange={setBoardId}>
+            <SelectTrigger className="w-56 h-8 text-xs">
+              <SelectValue placeholder="Select board" />
+            </SelectTrigger>
+            <SelectContent>
+              {boards.map((b) => (
+                <SelectItem key={b.id} value={b.id} className="text-xs">
+                  {b.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

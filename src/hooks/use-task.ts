@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useBoardStore } from "@/store/board-store";
+import { useUndoStore } from "@/store/undo-store";
 
 export function useTaskQuery(taskId: string | null) {
   return useQuery({
@@ -18,6 +19,7 @@ export function useTaskQuery(taskId: string | null) {
 
 export function useUpdateTaskMutation(boardId: string) {
   const queryClient = useQueryClient();
+  const pushUndo = useUndoStore((s) => s.push);
 
   return useMutation({
     mutationFn: async ({
@@ -27,13 +29,50 @@ export function useUpdateTaskMutation(boardId: string) {
       taskId: string;
       data: Record<string, unknown>;
     }) => {
+      const prevRes = await fetch(`/api/tasks/${taskId}`);
+      const prevTask = prevRes.ok ? await prevRes.json() : null;
+
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed to update task");
-      return res.json();
+      const updated = await res.json();
+
+      if (prevTask) {
+        const undoData: Record<string, unknown> = {};
+        for (const key of Object.keys(data)) {
+          if (key in prevTask) undoData[key] = prevTask[key];
+        }
+        const invalidate = () => {
+          queryClient.invalidateQueries({ queryKey: ["task", taskId] });
+          queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+        };
+        pushUndo({
+          label: `Update ${prevTask.title}`,
+          undo: async () => {
+            await fetch(`/api/tasks/${taskId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(undoData),
+            });
+            invalidate();
+            toast.info("Action undone");
+          },
+          redo: async () => {
+            await fetch(`/api/tasks/${taskId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+            invalidate();
+            toast.info("Action redone");
+          },
+        });
+      }
+
+      return updated;
     },
     onSuccess: (_data, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ["task", taskId] });
