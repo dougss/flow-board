@@ -12,13 +12,16 @@ export default async function AppLayout({
   });
 
   return (
-    <div className="flex h-screen bg-zinc-950 overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar
         workspaceId={workspace?.id}
         workspaceName={workspace?.name ?? "My Workspace"}
       />
       <KeyboardShortcutsProvider>
-        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <div
+          id="main-content"
+          className="flex flex-col flex-1 min-w-0 overflow-hidden"
+        >
           {children}
         </div>
       </KeyboardShortcutsProvider>

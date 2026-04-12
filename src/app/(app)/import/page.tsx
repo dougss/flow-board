@@ -111,20 +111,20 @@ export default function ImportPage() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-zinc-950">
+    <div className="flex flex-col h-full overflow-y-auto bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-zinc-800 flex-shrink-0">
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-border flex-shrink-0">
         <Upload className="w-5 h-5 text-indigo-400" />
-        <h1 className="text-zinc-100 font-semibold text-lg">
+        <h1 className="text-foreground font-semibold text-lg">
           Import from Obsidian
         </h1>
       </div>
 
       <div className="flex-1 max-w-xl mx-auto w-full px-6 py-8 space-y-6">
         {/* Form */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
+        <div className="bg-card border border-border rounded-xl p-6 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-zinc-400 text-xs font-medium">
+            <label className="text-muted-foreground text-xs font-medium">
               Vault Path
             </label>
             <input
@@ -132,12 +132,12 @@ export default function ImportPage() {
               value={vaultPath}
               onChange={(e) => setVaultPath(e.target.value)}
               disabled={status === "importing"}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 disabled:opacity-50 font-mono"
+              className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-indigo-500 disabled:opacity-50 font-mono"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-zinc-400 text-xs font-medium">
+            <label className="text-muted-foreground text-xs font-medium">
               Workspace Name
             </label>
             <input
@@ -145,7 +145,7 @@ export default function ImportPage() {
               value={workspaceName}
               onChange={(e) => setWorkspaceName(e.target.value)}
               disabled={status === "importing"}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+              className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-indigo-500 disabled:opacity-50"
             />
           </div>
 
@@ -153,7 +153,7 @@ export default function ImportPage() {
             <button
               onClick={handlePreview}
               disabled={status === "importing" || status === "previewing"}
-              className="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-300 text-sm hover:border-zinc-500 hover:text-zinc-100 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg border border-border text-muted-foreground text-sm hover:border-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
             >
               {status === "previewing" ? "Checking…" : "Preview"}
             </button>
@@ -183,9 +183,9 @@ export default function ImportPage() {
 
         {/* Preview table */}
         {preview && status !== "done" && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
+          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-zinc-300 text-sm font-medium">
+              <p className="text-card-foreground text-sm font-medium">
                 Preview ({preview.summary.demands} demands,{" "}
                 {preview.summary.projects} projects, {preview.summary.labels}{" "}
                 labels)
@@ -195,13 +195,13 @@ export default function ImportPage() {
                   {preview.summary.tags.slice(0, 5).map((tag) => (
                     <span
                       key={tag}
-                      className="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700"
+                      className="text-[10px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded border border-border"
                     >
                       {tag}
                     </span>
                   ))}
                   {preview.summary.tags.length > 5 && (
-                    <span className="text-[10px] text-zinc-600">
+                    <span className="text-[10px] text-muted-foreground/60">
                       +{preview.summary.tags.length - 5}
                     </span>
                   )}
@@ -218,7 +218,7 @@ export default function ImportPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-zinc-800">
+                  <tr className="border-b border-border">
                     <th className="text-left text-zinc-500 font-medium py-2 pr-3">
                       Source
                     </th>
@@ -240,7 +240,7 @@ export default function ImportPage() {
                   {preview.items.map((item) => (
                     <tr
                       key={item.filename}
-                      className="border-b border-zinc-800/50 hover:bg-zinc-800/40 transition-colors"
+                      className="border-b border-border/50 hover:bg-accent/40 transition-colors"
                     >
                       <td className="py-2 pr-3">
                         {item.source === "demand" ? (
@@ -249,11 +249,11 @@ export default function ImportPage() {
                           <FolderKanban className="w-3.5 h-3.5 text-emerald-400" />
                         )}
                       </td>
-                      <td className="py-2 pr-3 text-zinc-200 max-w-[200px] truncate">
+                      <td className="py-2 pr-3 text-foreground max-w-[200px] truncate">
                         {item.title}
                       </td>
                       <td className="py-2 pr-3">
-                        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700">
+                        <span className="bg-secondary text-muted-foreground px-1.5 py-0.5 rounded border border-border">
                           {item.status}
                         </span>
                       </td>
@@ -265,13 +265,13 @@ export default function ImportPage() {
                           {item.tags.slice(0, 3).map((tag) => (
                             <span
                               key={tag}
-                              className="bg-zinc-800 text-zinc-500 px-1 py-0.5 rounded text-[10px]"
+                              className="bg-secondary text-muted-foreground px-1 py-0.5 rounded text-[10px]"
                             >
                               {tag}
                             </span>
                           ))}
                           {item.tags.length > 3 && (
-                            <span className="text-zinc-600 text-[10px]">
+                            <span className="text-muted-foreground/60 text-[10px]">
                               +{item.tags.length - 3}
                             </span>
                           )}
@@ -292,7 +292,7 @@ export default function ImportPage() {
               <span>Importing…</span>
               <span>{progress}%</span>
             </div>
-            <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
               <div
                 className="h-full bg-indigo-600 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -310,30 +310,30 @@ export default function ImportPage() {
 
         {/* Success */}
         {status === "done" && result && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
+          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
             <div className="flex items-center gap-2 text-green-400">
               <CheckCircle className="w-5 h-5" />
               <span className="font-medium">Import complete</span>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-zinc-800 rounded-lg p-3 text-center">
-                <p className="text-2xl font-semibold text-zinc-100">
+              <div className="bg-secondary rounded-lg p-3 text-center">
+                <p className="text-2xl font-semibold text-foreground">
                   {result.projects}
                 </p>
-                <p className="text-zinc-500 text-xs mt-0.5">Projects</p>
+                <p className="text-muted-foreground text-xs mt-0.5">Projects</p>
               </div>
-              <div className="bg-zinc-800 rounded-lg p-3 text-center">
-                <p className="text-2xl font-semibold text-zinc-100">
+              <div className="bg-secondary rounded-lg p-3 text-center">
+                <p className="text-2xl font-semibold text-foreground">
                   {result.demands}
                 </p>
-                <p className="text-zinc-500 text-xs mt-0.5">Demands</p>
+                <p className="text-muted-foreground text-xs mt-0.5">Demands</p>
               </div>
-              <div className="bg-zinc-800 rounded-lg p-3 text-center">
-                <p className="text-2xl font-semibold text-zinc-100">
+              <div className="bg-secondary rounded-lg p-3 text-center">
+                <p className="text-2xl font-semibold text-foreground">
                   {result.labels}
                 </p>
-                <p className="text-zinc-500 text-xs mt-0.5">Labels</p>
+                <p className="text-muted-foreground text-xs mt-0.5">Labels</p>
               </div>
             </div>
 

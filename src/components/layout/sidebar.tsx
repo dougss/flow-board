@@ -91,10 +91,10 @@ export function Sidebar({
     <motion.aside
       animate={{ width: collapsed ? 64 : 256 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
-      className="relative flex h-screen flex-col bg-zinc-950 border-r border-zinc-800 overflow-hidden flex-shrink-0"
+      className="relative flex h-screen flex-col bg-background border-r border-border overflow-hidden flex-shrink-0"
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-zinc-800">
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
         <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
           <LayoutGrid className="w-4 h-4 text-white" />
         </div>
@@ -105,7 +105,7 @@ export function Sidebar({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -8 }}
               transition={{ duration: 0.15 }}
-              className="text-white font-semibold text-base whitespace-nowrap"
+              className="text-foreground font-semibold text-base whitespace-nowrap"
             >
               FlowBoard
             </motion.span>
@@ -114,8 +114,8 @@ export function Sidebar({
       </div>
 
       {/* Workspace */}
-      <div className="px-3 py-3 border-b border-zinc-800">
-        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-zinc-900">
+      <div className="px-3 py-3 border-b border-border">
+        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-card">
           <div className="w-5 h-5 rounded bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
             <span className="text-indigo-400 text-xs font-bold">
               {workspaceName.charAt(0).toUpperCase()}
@@ -128,7 +128,7 @@ export function Sidebar({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="text-zinc-300 text-xs font-medium truncate"
+                className="text-muted-foreground text-xs font-medium truncate"
               >
                 {workspaceName}
               </motion.span>
@@ -141,7 +141,7 @@ export function Sidebar({
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
         {!collapsed && workspaceId && (
           <div className="flex items-center justify-between px-2 mb-1">
-            <span className="text-[10px] text-zinc-600 uppercase tracking-wide font-medium">
+            <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wide font-medium">
               Projects
             </span>
             <CreateProjectPopover workspaceId={workspaceId} />
@@ -153,7 +153,7 @@ export function Sidebar({
             <div key={project.id}>
               <button
                 onClick={() => toggleProject(project.id)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               >
                 <FolderKanban className="w-4 h-4 flex-shrink-0" />
                 <AnimatePresence>
@@ -193,7 +193,7 @@ export function Sidebar({
                             "flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors",
                             isActive
                               ? "bg-indigo-600/20 text-indigo-400 font-medium"
-                              : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800",
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent",
                           )}
                         >
                           <LayoutGrid className="w-3 h-3 flex-shrink-0" />
@@ -210,7 +210,7 @@ export function Sidebar({
       </nav>
 
       {/* Bottom links */}
-      <div className="border-t border-zinc-800 py-3 px-2 space-y-1">
+      <div className="border-t border-border py-3 px-2 space-y-1">
         {bottomLinks.map(({ href, icon: Icon, label }) => {
           const isActive = pathname === href;
           return (
@@ -221,7 +221,7 @@ export function Sidebar({
                 "flex items-center gap-3 px-2 py-1.5 rounded-md text-xs transition-colors",
                 isActive
                   ? "bg-indigo-600/20 text-indigo-400"
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800",
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent",
               )}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
@@ -245,7 +245,7 @@ export function Sidebar({
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center gap-3 px-2 py-1.5 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors text-xs"
+          className="w-full flex items-center gap-3 px-2 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-xs"
         >
           {theme === "dark" ? (
             <Sun className="w-4 h-4 flex-shrink-0" />
@@ -270,7 +270,8 @@ export function Sidebar({
         {/* Collapse toggle */}
         <button
           onClick={() => setCollapsed((c) => !c)}
-          className="w-full flex items-center gap-3 px-2 py-1.5 rounded-md text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 transition-colors"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="w-full flex items-center gap-3 px-2 py-1.5 rounded-md text-muted-foreground/60 hover:text-muted-foreground hover:bg-accent transition-colors"
         >
           {collapsed ? (
             <ChevronRight className="w-4 h-4 flex-shrink-0" />

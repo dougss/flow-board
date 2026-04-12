@@ -16,7 +16,7 @@ import {
   Legend,
 } from "recharts";
 import { BarChart3, AlertCircle, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 
@@ -28,17 +28,11 @@ interface StatCardProps {
 
 function StatCard({ label, value, sub }: StatCardProps) {
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-      <p className="text-zinc-500 text-xs mb-1">{label}</p>
-      <p className="text-2xl font-semibold text-zinc-100">{value}</p>
-      {sub && <p className="text-zinc-600 text-xs mt-1">{sub}</p>}
+    <div className="bg-card border border-border rounded-xl p-4">
+      <p className="text-muted-foreground text-xs mb-1">{label}</p>
+      <p className="text-2xl font-semibold text-foreground">{value}</p>
+      {sub && <p className="text-muted-foreground/60 text-xs mt-1">{sub}</p>}
     </div>
-  );
-}
-
-function Skeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn("bg-zinc-800 animate-pulse rounded-lg", className)} />
   );
 }
 
@@ -54,16 +48,16 @@ export default function DashboardPage() {
   const { boards, boardId, setBoardId, data, loading } = useDashboard();
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-zinc-950">
+    <div className="flex flex-col h-full overflow-y-auto bg-background">
       {/* Header */}
-      <div className="flex items-center gap-4 px-6 py-4 border-b border-zinc-800 flex-shrink-0">
+      <div className="flex items-center gap-4 px-6 py-4 border-b border-border flex-shrink-0">
         <BarChart3 className="w-5 h-5 text-indigo-400" />
-        <h1 className="text-zinc-100 font-semibold text-lg">Dashboard</h1>
+        <h1 className="text-foreground font-semibold text-lg">Dashboard</h1>
         <div className="ml-auto relative">
           <select
             value={boardId}
             onChange={(e) => setBoardId(e.target.value)}
-            className="appearance-none bg-zinc-900 border border-zinc-800 rounded-md px-3 py-1.5 pr-8 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500 w-56 cursor-pointer"
+            className="appearance-none bg-card border border-border rounded-md px-3 py-1.5 pr-8 text-xs text-foreground focus:outline-none focus:border-indigo-500 w-56 cursor-pointer"
           >
             {boards.map((b) => (
               <option key={b.id} value={b.id}>
@@ -71,7 +65,7 @@ export default function DashboardPage() {
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
         </div>
       </div>
 
@@ -107,8 +101,8 @@ export default function DashboardPage() {
         {/* Charts row 1 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* By Status */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 col-span-1">
-            <p className="text-zinc-400 text-xs font-medium mb-3">
+          <div className="bg-card border border-border rounded-xl p-4 col-span-1">
+            <p className="text-muted-foreground text-xs font-medium mb-3">
               Tasks by Status
             </p>
             {loading ? (
@@ -142,8 +136,8 @@ export default function DashboardPage() {
           </div>
 
           {/* By Priority */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-            <p className="text-zinc-400 text-xs font-medium mb-3">
+          <div className="bg-card border border-border rounded-xl p-4">
+            <p className="text-muted-foreground text-xs font-medium mb-3">
               Tasks by Priority
             </p>
             {loading ? (
@@ -190,8 +184,8 @@ export default function DashboardPage() {
           </div>
 
           {/* By Type */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-            <p className="text-zinc-400 text-xs font-medium mb-3">
+          <div className="bg-card border border-border rounded-xl p-4">
+            <p className="text-muted-foreground text-xs font-medium mb-3">
               Tasks by Type
             </p>
             {loading ? (
@@ -236,8 +230,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Velocity chart */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <p className="text-zinc-400 text-xs font-medium mb-3">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-muted-foreground text-xs font-medium mb-3">
             Velocity (last 8 weeks)
           </p>
           {loading ? (
@@ -287,8 +281,8 @@ export default function DashboardPage() {
         {boardId && <ActivityFeed boardId={boardId} />}
 
         {/* Overdue tasks */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <p className="text-zinc-400 text-xs font-medium mb-3 flex items-center gap-2">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-muted-foreground text-xs font-medium mb-3 flex items-center gap-2">
             <AlertCircle className="w-3.5 h-3.5 text-red-400" />
             Overdue Tasks
           </p>
@@ -299,13 +293,13 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (data?.overdue ?? []).length === 0 ? (
-            <p className="text-zinc-600 text-sm">No overdue tasks.</p>
+            <p className="text-muted-foreground text-sm">No overdue tasks.</p>
           ) : (
             <div className="space-y-1">
               {data?.overdue.map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
                 >
                   <div
                     className="w-2 h-2 rounded-full flex-shrink-0"
@@ -313,7 +307,7 @@ export default function DashboardPage() {
                       background: PRIORITY_COLORS[task.priority] ?? "#71717a",
                     }}
                   />
-                  <span className="text-sm text-zinc-300 flex-1 truncate">
+                  <span className="text-sm text-foreground flex-1 truncate">
                     {task.title}
                   </span>
                   <span className="text-xs text-red-400 flex-shrink-0">

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { CreateFirstProject } from "./create-first-project";
 
 export default async function AppHomePage() {
   const workspace = await db.workspace.findFirst({
@@ -43,21 +44,25 @@ export default async function AppHomePage() {
       </div>
 
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold text-zinc-100">
+        <h1 className="text-2xl font-semibold text-foreground">
           Welcome to FlowBoard
         </h1>
-        <p className="text-zinc-500 text-sm max-w-sm">
+        <p className="text-muted-foreground text-sm max-w-sm">
           Create your first project to start organizing tasks and tracking
           progress.
         </p>
       </div>
 
-      <a
-        href="/import"
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition-colors"
-      >
-        Import from Obsidian
-      </a>
+      <div className="flex items-center gap-3">
+        <a
+          href="/import"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition-colors"
+        >
+          Import from Obsidian
+        </a>
+        <span className="text-muted-foreground text-xs">or</span>
+        <CreateFirstProject />
+      </div>
     </div>
   );
 }

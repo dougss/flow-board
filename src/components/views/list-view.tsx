@@ -23,9 +23,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn, formatDate } from "@/lib/utils";
-import { useBoardQuery } from "@/hooks/use-board";
+import { useBoardQuery, useUpdateTask, useDeleteTask } from "@/hooks/use-board";
 import { useBoardStore } from "@/store/board-store";
-import type { TaskWithRelations, TaskType, TaskPriority } from "@/types";
+import { toast } from "sonner";
+import type { TaskWithRelations, TaskPriority } from "@/types";
+
+const PRIORITIES: TaskPriority[] = ["urgent", "high", "medium", "low", "none"];
 
 type SortKey =
   | "title"
@@ -51,8 +54,8 @@ const PRIORITY_COLORS: Record<string, string> = {
   high: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   medium:
     "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  low: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400",
-  none: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400",
+  low: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-muted-foreground",
+  none: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-muted-foreground",
 };
 
 const TYPE_ICONS: Record<
@@ -81,6 +84,9 @@ type ListViewProps = { boardId: string };
 export function ListView({ boardId }: ListViewProps): React.JSX.Element {
   const { data: board } = useBoardQuery(boardId);
   const selectTask = useBoardStore((s) => s.selectTask);
+  const updateTask = useUpdateTask(boardId);
+  const deleteTask = useDeleteTask(boardId);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const [sortKey, setSortKey] = useState<SortKey>("title");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -198,7 +204,7 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
   }) => (
     <th
       className={cn(
-        "px-3 py-2.5 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 cursor-pointer select-none hover:text-neutral-900 dark:hover:text-neutral-100 whitespace-nowrap",
+        "px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground cursor-pointer select-none hover:text-foreground whitespace-nowrap",
         className,
       )}
       onClick={() => handleSort(col)}
@@ -215,12 +221,12 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
-        <span className="text-sm text-neutral-500 dark:text-neutral-400">
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-background">
+        <span className="text-sm text-muted-foreground">
           {allTasks.length} tasks
         </span>
         <div className="flex items-center gap-1.5 ml-auto">
-          <span className="text-xs text-neutral-500">Group by</span>
+          <span className="text-xs text-muted-foreground">Group by</span>
           <Select
             value={groupBy}
             onValueChange={(v) => setGroupBy(v as GroupBy)}
@@ -245,16 +251,95 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
           <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
             {selected.size} selected
           </span>
-          <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5">
-            <ArrowRight size={12} /> Move to column
-          </Button>
-          <Button size="sm" variant="outline" className="h-7 text-xs">
-            Change priority
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <ArrowRight size={12} className="text-indigo-400" />
+            <select
+              disabled={bulkLoading}
+              onChange={async (e) => {
+                if (!e.target.value) return;
+                const columnId = e.target.value;
+                const colName = board?.columns.find(
+                  (c) => c.id === columnId,
+                )?.name;
+                setBulkLoading(true);
+                const ids = [...selected];
+                const results = await Promise.allSettled(
+                  ids.map((taskId) =>
+                    updateTask.mutateAsync({
+                      taskId,
+                      data: { columnId, status: colName },
+                    }),
+                  ),
+                );
+                const failed = results.filter(
+                  (r) => r.status === "rejected",
+                ).length;
+                if (failed > 0) toast.error(`${failed} task(s) failed to move`);
+                else toast.success(`${ids.length} task(s) moved`);
+                clearSelection();
+                setBulkLoading(false);
+                e.target.value = "";
+              }}
+              className="h-7 bg-white dark:bg-zinc-800 border border-indigo-200 dark:border-zinc-700 rounded-md px-2 text-xs focus:outline-none disabled:opacity-50"
+            >
+              <option value="">Move to...</option>
+              {(board?.columns ?? []).map((col) => (
+                <option key={col.id} value={col.id}>
+                  {col.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <select
+            disabled={bulkLoading}
+            onChange={async (e) => {
+              if (!e.target.value) return;
+              const priority = e.target.value;
+              setBulkLoading(true);
+              const ids = [...selected];
+              const results = await Promise.allSettled(
+                ids.map((taskId) =>
+                  updateTask.mutateAsync({ taskId, data: { priority } }),
+                ),
+              );
+              const failed = results.filter(
+                (r) => r.status === "rejected",
+              ).length;
+              if (failed > 0) toast.error(`${failed} task(s) failed to update`);
+              else toast.success(`${ids.length} task(s) updated`);
+              clearSelection();
+              setBulkLoading(false);
+              e.target.value = "";
+            }}
+            className="h-7 bg-white dark:bg-zinc-800 border border-indigo-200 dark:border-zinc-700 rounded-md px-2 text-xs focus:outline-none disabled:opacity-50"
+          >
+            <option value="">Priority...</option>
+            {PRIORITIES.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
           <Button
             size="sm"
             variant="destructive"
             className="h-7 text-xs gap-1.5"
+            disabled={bulkLoading}
+            onClick={async () => {
+              if (!confirm(`Delete ${selected.size} task(s)?`)) return;
+              setBulkLoading(true);
+              const ids = [...selected];
+              const results = await Promise.allSettled(
+                ids.map((taskId) => deleteTask.mutateAsync(taskId)),
+              );
+              const failed = results.filter(
+                (r) => r.status === "rejected",
+              ).length;
+              if (failed > 0) toast.error(`${failed} task(s) failed to delete`);
+              else toast.success(`${ids.length} task(s) deleted`);
+              clearSelection();
+              setBulkLoading(false);
+            }}
           >
             <Trash2 size={12} /> Delete
           </Button>
@@ -272,7 +357,7 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
       {/* Table */}
       <div className="flex-1 overflow-auto">
         <table className="w-full text-sm border-collapse">
-          <thead className="sticky top-0 z-10 bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800">
+          <thead className="sticky top-0 z-10 bg-card border-b border-border">
             <tr>
               <th className="w-8 px-3 py-2.5">
                 <Checkbox
@@ -293,7 +378,7 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
               <HeaderCell label="Assignee" col="assignedTo" />
               <HeaderCell label="Due Date" col="dueDate" />
               <HeaderCell label="Points" col="storyPoints" />
-              <th className="px-3 py-2.5 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+              <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground">
                 Labels
               </th>
             </tr>
@@ -302,13 +387,10 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
             {Object.entries(grouped).map(([group, tasks]) => (
               <>
                 {groupBy !== "none" && (
-                  <tr
-                    key={`group-${group}`}
-                    className="bg-neutral-100 dark:bg-neutral-800/60"
-                  >
+                  <tr key={`group-${group}`} className="bg-accent/60">
                     <td
                       colSpan={10}
-                      className="px-4 py-1.5 text-xs font-bold text-neutral-600 dark:text-neutral-300 uppercase tracking-wide"
+                      className="px-4 py-1.5 text-xs font-bold text-foreground/80 uppercase tracking-wide"
                     >
                       {group}{" "}
                       <span className="font-normal opacity-60 ml-1">
@@ -327,10 +409,8 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
                     <tr
                       key={task.id}
                       className={cn(
-                        "border-b border-neutral-100 dark:border-neutral-800/60 cursor-pointer transition-colors",
-                        idx % 2 === 0
-                          ? "bg-white dark:bg-neutral-950"
-                          : "bg-neutral-50/60 dark:bg-neutral-900/40",
+                        "border-b border-border/60 cursor-pointer transition-colors",
+                        idx % 2 === 0 ? "bg-background" : "bg-card/60",
                         isSelected && "bg-indigo-50 dark:bg-indigo-950/30",
                         "hover:bg-indigo-50/80 dark:hover:bg-indigo-950/20",
                       )}
@@ -344,9 +424,9 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
                         />
                       </td>
                       <td className="px-2 py-2">
-                        <Icon size={14} className="text-neutral-400" />
+                        <Icon size={14} className="text-muted-foreground" />
                       </td>
-                      <td className="px-3 py-2 font-medium text-neutral-900 dark:text-neutral-100 max-w-[280px] truncate">
+                      <td className="px-3 py-2 font-medium text-foreground max-w-[280px] truncate">
                         {task.title}
                       </td>
                       <td className="px-3 py-2">
@@ -355,7 +435,7 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
                             className="w-2 h-2 rounded-full flex-shrink-0"
                             style={{ background: task.columnColor }}
                           />
-                          <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                          <span className="text-xs text-muted-foreground">
                             {task.columnName}
                           </span>
                         </span>
@@ -370,10 +450,10 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
                           {task.priority}
                         </Badge>
                       </td>
-                      <td className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">
+                      <td className="px-3 py-2 text-xs text-muted-foreground">
                         {task.type}
                       </td>
-                      <td className="px-3 py-2 text-xs text-neutral-600 dark:text-neutral-400 max-w-[120px] truncate">
+                      <td className="px-3 py-2 text-xs text-muted-foreground max-w-[120px] truncate">
                         {task.assignedTo ?? "—"}
                       </td>
                       <td
@@ -381,12 +461,12 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
                           "px-3 py-2 text-xs whitespace-nowrap",
                           overdue
                             ? "text-red-600 dark:text-red-400 font-medium"
-                            : "text-neutral-500 dark:text-neutral-400",
+                            : "text-muted-foreground",
                         )}
                       >
                         {task.dueDate ? formatDate(task.dueDate) : "—"}
                       </td>
-                      <td className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400 text-center">
+                      <td className="px-3 py-2 text-xs text-muted-foreground text-center">
                         {task.storyPoints ?? "—"}
                       </td>
                       <td className="px-3 py-2">
@@ -410,7 +490,7 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
         </table>
 
         {allTasks.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-24 text-neutral-400">
+          <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
             <CheckSquare size={36} className="mb-3 opacity-30" />
             <p className="text-sm">No tasks yet</p>
           </div>

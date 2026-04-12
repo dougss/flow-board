@@ -90,8 +90,7 @@ export function TimelineView({
 
   const getTaskStart = useCallback(
     (task: FlatTask): Date => {
-      // Use today as fallback start
-      return today;
+      return task.createdAt ? new Date(task.createdAt as string) : today;
     },
     [today],
   );
@@ -175,7 +174,7 @@ export function TimelineView({
 
   if (tasks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-24 text-neutral-400 gap-3">
+      <div className="flex flex-col items-center justify-center h-full py-24 text-muted-foreground gap-3">
         <CalendarClock size={40} className="opacity-30" />
         <p className="text-sm font-medium">No tasks with due dates</p>
         <p className="text-xs">
@@ -190,8 +189,8 @@ export function TimelineView({
   return (
     <div className="flex flex-col h-full overflow-hidden select-none">
       {/* Toolbar */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 flex-shrink-0">
-        <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5">
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-background flex-shrink-0">
+        <div className="flex items-center gap-1 bg-secondary rounded-lg p-0.5">
           {(["day", "week", "month"] as ZoomLevel[]).map((z) => (
             <button
               key={z}
@@ -199,8 +198,8 @@ export function TimelineView({
               className={cn(
                 "px-3 py-1 rounded-md text-xs font-medium transition-colors capitalize",
                 zoom === z
-                  ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm"
-                  : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300",
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {z}
@@ -233,7 +232,7 @@ export function TimelineView({
             <ChevronRight size={14} />
           </Button>
         </div>
-        <span className="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
+        <span className="text-xs text-muted-foreground tabular-nums">
           {tasks.length} tasks with due dates
         </span>
       </div>
@@ -242,12 +241,12 @@ export function TimelineView({
       <div className="flex flex-1 overflow-hidden">
         {/* Left panel — task list */}
         <div
-          className="flex-shrink-0 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 overflow-y-auto"
+          className="flex-shrink-0 border-r border-border bg-background overflow-y-auto"
           style={{ width: LEFT_PANEL_WIDTH }}
         >
           {/* Header spacer matching the 2-row timeline header */}
-          <div className="h-[52px] border-b border-neutral-200 dark:border-neutral-800 flex items-end px-3 pb-2">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">
+          <div className="h-[52px] border-b border-border flex items-end px-3 pb-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Task
             </span>
           </div>
@@ -257,7 +256,7 @@ export function TimelineView({
             return (
               <div
                 key={task.id}
-                className="flex items-center gap-2 px-3 border-b border-neutral-100 dark:border-neutral-800/60 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
+                className="flex items-center gap-2 px-3 border-b border-border/60 cursor-pointer hover:bg-accent/50 transition-colors"
                 style={{ height: ROW_HEIGHT + ROW_GAP }}
                 onClick={() => selectTask(task.id)}
               >
@@ -265,13 +264,13 @@ export function TimelineView({
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ background: task.columnColor }}
                 />
-                <span className="text-xs font-medium text-neutral-800 dark:text-neutral-200 truncate flex-1">
+                <span className="text-xs font-medium text-foreground truncate flex-1">
                   {task.title}
                 </span>
                 <span
                   className={cn(
                     "text-[10px] tabular-nums flex-shrink-0",
-                    overdue ? "text-red-500" : "text-neutral-400",
+                    overdue ? "text-red-500" : "text-muted-foreground",
                   )}
                 >
                   {format(end, "MMM d")}
@@ -286,7 +285,7 @@ export function TimelineView({
           <div style={{ width: totalWidth, position: "relative" }}>
             {/* Header — 2 rows: month groups + day numbers */}
             <div
-              className="sticky top-0 z-20 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800"
+              className="sticky top-0 z-20 bg-background border-b border-border"
               style={{ width: totalWidth }}
             >
               {/* Month/week group row */}
@@ -294,10 +293,10 @@ export function TimelineView({
                 {headerGroups.map((g, i) => (
                   <div
                     key={i}
-                    className="flex-shrink-0 border-r border-neutral-100 dark:border-neutral-800 flex items-center px-2"
+                    className="flex-shrink-0 border-r border-border/60 flex items-center px-2"
                     style={{ width: g.span * cfg.cellWidth }}
                   >
-                    <span className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 truncate">
+                    <span className="text-[10px] font-semibold text-muted-foreground truncate">
                       {g.label}
                     </span>
                   </div>
@@ -309,7 +308,7 @@ export function TimelineView({
                   <div
                     key={i}
                     className={cn(
-                      "flex-shrink-0 flex items-center justify-center border-r border-neutral-100 dark:border-neutral-800/60",
+                      "flex-shrink-0 flex items-center justify-center border-r border-border/60",
                       isToday(d) && "bg-indigo-50 dark:bg-indigo-950/30",
                     )}
                     style={{ width: cfg.cellWidth }}
@@ -319,7 +318,7 @@ export function TimelineView({
                         "text-[9px] font-medium tabular-nums",
                         isToday(d)
                           ? "text-indigo-600 dark:text-indigo-400 font-bold"
-                          : "text-neutral-400 dark:text-neutral-600",
+                          : "text-muted-foreground/60",
                       )}
                     >
                       {format(d, "d")}
@@ -345,7 +344,7 @@ export function TimelineView({
                     "absolute top-0 bottom-0 border-r",
                     isToday(d)
                       ? "border-red-400 dark:border-red-500 border-dashed z-10"
-                      : "border-neutral-100 dark:border-neutral-800/40",
+                      : "border-border/60/40",
                   )}
                   style={{ left: i * cfg.cellWidth, width: cfg.cellWidth }}
                 />

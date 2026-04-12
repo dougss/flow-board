@@ -22,7 +22,7 @@ const ACTION_CONFIG: Record<string, { icon: LucideIcon; color: string }> = {
   column: { icon: ArrowRight, color: "text-blue-400" },
 };
 
-const DEFAULT_CONFIG = { icon: Clock, color: "text-zinc-500" };
+const DEFAULT_CONFIG = { icon: Clock, color: "text-muted-foreground" };
 
 function formatChange(
   action: string,
@@ -44,8 +44,8 @@ export function ActivityFeed({ boardId }: ActivityFeedProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-        <p className="text-zinc-400 text-xs font-medium mb-3 flex items-center gap-2">
+      <div className="bg-card border border-border rounded-xl p-4">
+        <p className="text-muted-foreground text-xs font-medium mb-3 flex items-center gap-2">
           <Clock className="w-3.5 h-3.5" />
           Recent Activity
         </p>
@@ -53,7 +53,7 @@ export function ActivityFeed({ boardId }: ActivityFeedProps) {
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="bg-zinc-800 animate-pulse rounded-lg h-10"
+              className="bg-secondary animate-pulse rounded-lg h-10"
             />
           ))}
         </div>
@@ -62,13 +62,13 @@ export function ActivityFeed({ boardId }: ActivityFeedProps) {
   }
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-      <p className="text-zinc-400 text-xs font-medium mb-3 flex items-center gap-2">
+    <div className="bg-card border border-border rounded-xl p-4">
+      <p className="text-muted-foreground text-xs font-medium mb-3 flex items-center gap-2">
         <Clock className="w-3.5 h-3.5" />
         Recent Activity
       </p>
       {activities.length === 0 ? (
-        <p className="text-zinc-600 text-sm">No recent activity.</p>
+        <p className="text-muted-foreground text-sm">No recent activity.</p>
       ) : (
         <div className="space-y-1">
           {activities.slice(0, 10).map((activity) => {
@@ -79,7 +79,7 @@ export function ActivityFeed({ boardId }: ActivityFeedProps) {
             return (
               <div
                 key={activity.id}
-                className="flex items-start gap-2.5 px-2 py-1.5 rounded-lg hover:bg-zinc-800/60 transition-colors"
+                className="flex items-start gap-2.5 px-2 py-1.5 rounded-lg hover:bg-accent/60 transition-colors"
               >
                 <Icon
                   className={cn(
@@ -88,10 +88,10 @@ export function ActivityFeed({ boardId }: ActivityFeedProps) {
                   )}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-zinc-300 truncate">
+                  <p className="text-xs text-foreground truncate">
                     <span className="font-medium">{activity.task.title}</span>
                   </p>
-                  <p className="text-[10px] text-zinc-500 truncate">
+                  <p className="text-[10px] text-muted-foreground truncate">
                     {formatChange(
                       activity.action,
                       activity.field,
@@ -100,7 +100,7 @@ export function ActivityFeed({ boardId }: ActivityFeedProps) {
                     )}
                   </p>
                 </div>
-                <span className="text-[10px] text-zinc-600 flex-shrink-0 mt-0.5">
+                <span className="text-[10px] text-muted-foreground/60 flex-shrink-0 mt-0.5">
                   {formatDistanceToNow(new Date(activity.createdAt), {
                     addSuffix: true,
                   })}

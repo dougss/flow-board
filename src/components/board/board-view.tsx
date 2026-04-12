@@ -15,6 +15,7 @@ import {
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useQueryClient } from "@tanstack/react-query";
+import { LayoutGrid } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Column } from "./column";
@@ -172,7 +173,17 @@ export function BoardView({ boardId }: BoardViewProps) {
     );
   }
 
-  if (!board) return null;
+  if (!board) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-24 text-muted-foreground gap-3">
+        <LayoutGrid className="w-10 h-10 opacity-30" />
+        <p className="text-sm font-medium">Board not found</p>
+        <p className="text-xs">
+          This board may have been deleted or doesn&apos;t exist.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <DndContext

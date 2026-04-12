@@ -71,17 +71,17 @@ export function BulkActionBar({ boardId }: BulkActionBarProps) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2.5 bg-zinc-900/90 backdrop-blur border border-zinc-700 rounded-xl shadow-2xl"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-4 py-2.5 bg-card/90 backdrop-blur border border-border rounded-xl shadow-2xl"
         >
-          <span className="text-xs text-zinc-300 font-medium whitespace-nowrap">
+          <span className="text-xs text-card-foreground font-medium whitespace-nowrap">
             {count} selected
           </span>
 
-          <div className="w-px h-5 bg-zinc-700" />
+          <div className="w-px h-5 bg-border" />
 
           {/* Move to column */}
           <div className="flex items-center gap-1.5">
-            <ArrowRight className="w-3.5 h-3.5 text-zinc-500" />
+            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
             <select
               disabled={loading}
               onChange={(e) => {
@@ -92,7 +92,7 @@ export function BulkActionBar({ boardId }: BulkActionBarProps) {
                 });
                 e.target.value = "";
               }}
-              className="bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+              className="bg-secondary border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none focus:border-indigo-500 disabled:opacity-50"
             >
               <option value="">Move to...</option>
               {columns.map((col) => (
@@ -105,7 +105,7 @@ export function BulkActionBar({ boardId }: BulkActionBarProps) {
 
           {/* Change priority */}
           <div className="flex items-center gap-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 text-zinc-500" />
+            <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" />
             <select
               disabled={loading}
               onChange={(e) => {
@@ -113,7 +113,7 @@ export function BulkActionBar({ boardId }: BulkActionBarProps) {
                 batchUpdate({ priority: e.target.value });
                 e.target.value = "";
               }}
-              className="bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+              className="bg-secondary border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none focus:border-indigo-500 disabled:opacity-50"
             >
               <option value="">Priority...</option>
               {PRIORITIES.map((p) => (
@@ -138,13 +138,13 @@ export function BulkActionBar({ boardId }: BulkActionBarProps) {
             Delete
           </button>
 
-          <div className="w-px h-5 bg-zinc-700" />
+          <div className="w-px h-5 bg-border" />
 
           {/* Clear */}
           <button
             onClick={clearSelection}
             disabled={loading}
-            className="flex items-center justify-center w-6 h-6 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+            className="flex items-center justify-center w-6 h-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>
