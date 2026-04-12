@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, CheckCircle, ArrowRight, Loader2 } from "lucide-react";
+import {
+  Upload,
+  CheckCircle,
+  ArrowRight,
+  Loader2,
+  FileText,
+  FolderKanban,
+} from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +21,27 @@ interface ImportResult {
   firstBoardId?: string;
 }
 
+interface PreviewItem {
+  filename: string;
+  title: string;
+  status: string;
+  priority: string;
+  type: string;
+  tags: string[];
+  source: "demand" | "project";
+}
+
+interface PreviewData {
+  items: PreviewItem[];
+  summary: {
+    demands: number;
+    projects: number;
+    labels: number;
+    tags: string[];
+  };
+  errors?: string[];
+}
+
 export default function ImportPage() {
   const [vaultPath, setVaultPath] = useState(
     "~/Documents/Obsidian-Mind/20-Areas/career/leve-saude",
@@ -23,26 +51,31 @@ export default function ImportPage() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState("");
-  const [previewMsg, setPreviewMsg] = useState("");
+  const [preview, setPreview] = useState<PreviewData | null>(null);
 
   const handlePreview = async () => {
     setStatus("previewing");
-    setPreviewMsg("");
+    setPreview(null);
     try {
       const r = await fetch("/api/import/preview", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ vaultPath }),
       });
-      const data = await r.json();
-      setPreviewMsg(
-        data.message ?? `Found ${data.files ?? "?"} files at ${vaultPath}`,
-      );
+      if (!r.ok) {
+        const err = await r.json();
+        setError(err.error ?? "Preview failed");
+        setStatus("error");
+        return;
+      }
+      const data: PreviewData = await r.json();
+      setPreview(data);
     } catch {
-      setPreviewMsg(`Path: ${vaultPath}`);
-    } finally {
-      setStatus("idle");
+      setError("Failed to connect to preview endpoint");
+      setStatus("error");
+      return;
     }
+    setStatus("idle");
   };
 
   const handleImport = async () => {
@@ -101,9 +134,6 @@ export default function ImportPage() {
               disabled={status === "importing"}
               className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 disabled:opacity-50 font-mono"
             />
-            {previewMsg && (
-              <p className="text-zinc-500 text-xs mt-1">{previewMsg}</p>
-            )}
           </div>
 
           <div className="space-y-1.5">
@@ -150,6 +180,110 @@ export default function ImportPage() {
             </button>
           </div>
         </div>
+
+        {/* Preview table */}
+        {preview && status !== "done" && (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-zinc-300 text-sm font-medium">
+                Preview ({preview.summary.demands} demands,{" "}
+                {preview.summary.projects} projects, {preview.summary.labels}{" "}
+                labels)
+              </p>
+              {preview.summary.tags.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap justify-end max-w-xs">
+                  {preview.summary.tags.slice(0, 5).map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  {preview.summary.tags.length > 5 && (
+                    <span className="text-[10px] text-zinc-600">
+                      +{preview.summary.tags.length - 5}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {preview.errors && preview.errors.length > 0 && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-xs text-red-400">
+                {preview.errors.join("; ")}
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-zinc-800">
+                    <th className="text-left text-zinc-500 font-medium py-2 pr-3">
+                      Source
+                    </th>
+                    <th className="text-left text-zinc-500 font-medium py-2 pr-3">
+                      Title
+                    </th>
+                    <th className="text-left text-zinc-500 font-medium py-2 pr-3">
+                      Status
+                    </th>
+                    <th className="text-left text-zinc-500 font-medium py-2 pr-3">
+                      Priority
+                    </th>
+                    <th className="text-left text-zinc-500 font-medium py-2">
+                      Tags
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.items.map((item) => (
+                    <tr
+                      key={item.filename}
+                      className="border-b border-zinc-800/50 hover:bg-zinc-800/40 transition-colors"
+                    >
+                      <td className="py-2 pr-3">
+                        {item.source === "demand" ? (
+                          <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                        ) : (
+                          <FolderKanban className="w-3.5 h-3.5 text-emerald-400" />
+                        )}
+                      </td>
+                      <td className="py-2 pr-3 text-zinc-200 max-w-[200px] truncate">
+                        {item.title}
+                      </td>
+                      <td className="py-2 pr-3">
+                        <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700">
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-3 text-zinc-400">
+                        {item.priority}
+                      </td>
+                      <td className="py-2">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {item.tags.slice(0, 3).map((tag) => (
+                            <span
+                              key={tag}
+                              className="bg-zinc-800 text-zinc-500 px-1 py-0.5 rounded text-[10px]"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {item.tags.length > 3 && (
+                            <span className="text-zinc-600 text-[10px]">
+                              +{item.tags.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Progress */}
         {status === "importing" && (

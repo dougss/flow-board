@@ -51,10 +51,10 @@ export function Sidebar({
     if (!workspaceId) return;
     fetch(`/api/projects?workspaceId=${workspaceId}`)
       .then((r) => r.json())
-      .then((data) => {
-        setProjects(data.projects ?? []);
-        if (data.projects?.length > 0) {
-          setExpandedProjects(new Set([data.projects[0].id]));
+      .then((data: Project[]) => {
+        setProjects(data);
+        if (data.length > 0) {
+          setExpandedProjects(new Set([data[0].id]));
         }
       })
       .catch(() => {});

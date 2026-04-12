@@ -16,7 +16,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { BarChart3, AlertCircle } from "lucide-react";
+import { BarChart3, AlertCircle, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DashboardData {
@@ -29,6 +29,11 @@ interface DashboardData {
   byType: { name: string; count: number; color: string }[];
   velocity: { week: string; completed: number; created: number }[];
   overdue: { id: string; title: string; dueDate: string; priority: string }[];
+}
+
+interface BoardOption {
+  id: string;
+  name: string;
 }
 
 interface StatCardProps {
@@ -65,15 +70,36 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [boardId, setBoardId] = useState("");
+  const [boards, setBoards] = useState<BoardOption[]>([]);
+  const [boardsLoaded, setBoardsLoaded] = useState(false);
 
   useEffect(() => {
-    const params = boardId ? `?boardId=${boardId}` : "";
-    fetch(`/api/dashboard${params}`)
+    fetch("/api/boards")
+      .then((r) => r.json())
+      .then((data: BoardOption[]) => {
+        setBoards(data);
+        if (data.length > 0) {
+          setBoardId(data[0].id);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setBoardsLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    if (!boardsLoaded) return;
+    if (boards.length === 0) {
+      setLoading(false);
+      return;
+    }
+    if (!boardId) return;
+    setLoading(true);
+    fetch(`/api/dashboard?boardId=${boardId}`)
       .then((r) => r.json())
       .then((d) => setData(d))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [boardId]);
+  }, [boardId, boardsLoaded, boards.length]);
 
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-zinc-950">
@@ -81,14 +107,19 @@ export default function DashboardPage() {
       <div className="flex items-center gap-4 px-6 py-4 border-b border-zinc-800 flex-shrink-0">
         <BarChart3 className="w-5 h-5 text-indigo-400" />
         <h1 className="text-zinc-100 font-semibold text-lg">Dashboard</h1>
-        <div className="ml-auto">
-          <input
-            type="text"
+        <div className="ml-auto relative">
+          <select
             value={boardId}
             onChange={(e) => setBoardId(e.target.value)}
-            placeholder="Board ID filter…"
-            className="bg-zinc-900 border border-zinc-800 rounded-md px-3 py-1.5 text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 w-48"
-          />
+            className="appearance-none bg-zinc-900 border border-zinc-800 rounded-md px-3 py-1.5 pr-8 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500 w-56 cursor-pointer"
+          >
+            {boards.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
         </div>
       </div>
 
