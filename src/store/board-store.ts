@@ -29,10 +29,13 @@ interface BoardState {
   activeView: ViewType;
   selectedTaskId: string | null;
   isTaskDrawerOpen: boolean;
+  isSearchOpen: boolean;
   filters: Filters;
   setActiveView: (view: ViewType) => void;
   selectTask: (taskId: string) => void;
   closeTaskDrawer: () => void;
+  openSearch: () => void;
+  closeSearch: () => void;
   updateFilters: (partial: Partial<Filters>) => void;
   resetFilters: () => void;
 }
@@ -41,6 +44,7 @@ export const useBoardStore = create<BoardState>((set) => ({
   activeView: "board",
   selectedTaskId: null,
   isTaskDrawerOpen: false,
+  isSearchOpen: false,
   filters: defaultFilters,
 
   setActiveView: (view) => set({ activeView: view }),
@@ -49,6 +53,10 @@ export const useBoardStore = create<BoardState>((set) => ({
     set({ selectedTaskId: taskId, isTaskDrawerOpen: true }),
 
   closeTaskDrawer: () => set({ isTaskDrawerOpen: false, selectedTaskId: null }),
+
+  openSearch: () => set({ isSearchOpen: true }),
+
+  closeSearch: () => set({ isSearchOpen: false }),
 
   updateFilters: (partial) =>
     set((state) => ({ filters: { ...state.filters, ...partial } })),

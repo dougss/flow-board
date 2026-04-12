@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useBoardStore } from "@/store/board-store";
 import { SearchDialog } from "@/components/filters/search-dialog";
@@ -10,17 +10,22 @@ export function KeyboardShortcutsProvider({
 }: {
   children: React.ReactNode;
 }): React.ReactElement {
-  const [searchOpen, setSearchOpen] = useState(false);
-  const { setActiveView, closeTaskDrawer } = useBoardStore();
+  const {
+    isSearchOpen,
+    openSearch,
+    closeSearch,
+    setActiveView,
+    closeTaskDrawer,
+  } = useBoardStore();
 
-  const onSearch = useCallback(() => setSearchOpen(true), []);
+  const onSearch = useCallback(() => openSearch(), [openSearch]);
   const onEscape = useCallback(() => {
-    if (searchOpen) {
-      setSearchOpen(false);
+    if (isSearchOpen) {
+      closeSearch();
       return;
     }
     closeTaskDrawer();
-  }, [closeTaskDrawer, searchOpen]);
+  }, [closeTaskDrawer, closeSearch, isSearchOpen]);
 
   useKeyboardShortcuts({
     onSearch,
@@ -28,10 +33,18 @@ export function KeyboardShortcutsProvider({
     onViewChange: setActiveView,
   });
 
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) openSearch();
+      else closeSearch();
+    },
+    [openSearch, closeSearch],
+  );
+
   return (
     <>
       {children}
-      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <SearchDialog open={isSearchOpen} onOpenChange={handleOpenChange} />
     </>
   );
 }

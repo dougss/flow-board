@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -18,23 +17,7 @@ import {
 } from "recharts";
 import { BarChart3, AlertCircle, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface DashboardData {
-  totalTasks: number;
-  completedThisMonth: number;
-  createdThisMonth: number;
-  avgLeadTimeDays: number;
-  byStatus: { name: string; count: number; color: string }[];
-  byPriority: { name: string; count: number; color: string }[];
-  byType: { name: string; count: number; color: string }[];
-  velocity: { week: string; completed: number; created: number }[];
-  overdue: { id: string; title: string; dueDate: string; priority: string }[];
-}
-
-interface BoardOption {
-  id: string;
-  name: string;
-}
+import { useDashboard } from "@/hooks/use-dashboard";
 
 interface StatCardProps {
   label: string;
@@ -67,39 +50,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [boardId, setBoardId] = useState("");
-  const [boards, setBoards] = useState<BoardOption[]>([]);
-  const [boardsLoaded, setBoardsLoaded] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/boards")
-      .then((r) => r.json())
-      .then((data: BoardOption[]) => {
-        setBoards(data);
-        if (data.length > 0) {
-          setBoardId(data[0].id);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setBoardsLoaded(true));
-  }, []);
-
-  useEffect(() => {
-    if (!boardsLoaded) return;
-    if (boards.length === 0) {
-      setLoading(false);
-      return;
-    }
-    if (!boardId) return;
-    setLoading(true);
-    fetch(`/api/dashboard?boardId=${boardId}`)
-      .then((r) => r.json())
-      .then((d) => setData(d))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [boardId, boardsLoaded, boards.length]);
+  const { boards, boardId, setBoardId, data, loading } = useDashboard();
 
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-zinc-950">

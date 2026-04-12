@@ -98,7 +98,7 @@ export function Header({ boardId, title, projectName }: HeaderProps) {
         )}
 
         <button
-          onClick={() => {}}
+          onClick={() => useBoardStore.getState().openSearch()}
           title="Search (Cmd+K)"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
         >

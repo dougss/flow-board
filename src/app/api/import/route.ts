@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { Prisma } from "@/generated/prisma/client";
 import { readdir, readFile } from "fs/promises";
 import { NextResponse } from "next/server";
 import os from "node:os";
@@ -117,7 +118,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
   }
 
-  const result = await db.$transaction(async (tx: any) => {
+  const result = await db.$transaction(async (tx: Prisma.TransactionClient) => {
     const workspace = await tx.workspace.create({
       data: { name: workspaceName },
     });
@@ -215,11 +216,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     return {
-      imported: {
-        projects: createdProjects.length,
-        demands: taskCount,
-        labels: allTags.size,
-      },
+      projects: createdProjects.length,
+      demands: taskCount,
+      labels: allTags.size,
+      firstBoardId: board.id,
     };
   });
 

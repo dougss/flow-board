@@ -7,6 +7,7 @@ describe("board-store", () => {
       activeView: "board",
       selectedTaskId: null,
       isTaskDrawerOpen: false,
+      isSearchOpen: false,
       filters: {
         statuses: [],
         priorities: [],
@@ -54,5 +55,12 @@ describe("board-store", () => {
     useBoardStore.getState().updateFilters({ search: "test" });
     useBoardStore.getState().resetFilters();
     expect(useBoardStore.getState().filters.search).toBe("");
+  });
+
+  it("opens and closes search", () => {
+    useBoardStore.getState().openSearch();
+    expect(useBoardStore.getState().isSearchOpen).toBe(true);
+    useBoardStore.getState().closeSearch();
+    expect(useBoardStore.getState().isSearchOpen).toBe(false);
   });
 });
