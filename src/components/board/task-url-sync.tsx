@@ -8,14 +8,13 @@ export function TaskUrlSync(): null {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const handled = useRef(false);
+  const lastHandled = useRef<string | null>(null);
 
   useEffect(() => {
-    if (handled.current) return;
     const taskId = searchParams.get("task");
-    if (!taskId) return;
+    if (!taskId || taskId === lastHandled.current) return;
 
-    handled.current = true;
+    lastHandled.current = taskId;
     useBoardStore.getState().selectTask(taskId);
 
     const params = new URLSearchParams(searchParams.toString());

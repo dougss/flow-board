@@ -28,13 +28,14 @@ export function BulkActionBar({ boardId }: BulkActionBarProps) {
     setLoading(true);
     const ids = [...selectedTaskIds];
     const results = await Promise.allSettled(
-      ids.map((taskId) =>
-        fetch(`/api/tasks/${taskId}`, {
+      ids.map(async (taskId) => {
+        const res = await fetch(`/api/tasks/${taskId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
-        }),
-      ),
+        });
+        if (!res.ok) throw new Error(`Failed to update ${taskId}`);
+      }),
     );
     const failed = results.filter((r) => r.status === "rejected").length;
     if (failed > 0) toast.error(`${failed} task(s) failed to update`);
@@ -49,7 +50,10 @@ export function BulkActionBar({ boardId }: BulkActionBarProps) {
     setLoading(true);
     const ids = [...selectedTaskIds];
     const results = await Promise.allSettled(
-      ids.map((taskId) => fetch(`/api/tasks/${taskId}`, { method: "DELETE" })),
+      ids.map(async (taskId) => {
+        const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+        if (!res.ok) throw new Error(`Failed to delete ${taskId}`);
+      }),
     );
     const failed = results.filter((r) => r.status === "rejected").length;
     if (failed > 0) toast.error(`${failed} task(s) failed to delete`);
