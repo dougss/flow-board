@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FolderKanban,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/store/theme-store";
@@ -48,6 +50,7 @@ export function Sidebar({
   workspaceName = "My Workspace",
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     new Set(),
   );
@@ -87,7 +90,16 @@ export function Sidebar({
     { href: "/settings", icon: Settings, label: "Settings" },
   ];
 
-  return (
+  // Close mobile sidebar on navigation
+  const pathnameRef = useRef(pathname);
+  useEffect(() => {
+    if (pathnameRef.current !== pathname) {
+      setMobileOpen(false);
+      pathnameRef.current = pathname;
+    }
+  }, [pathname]);
+
+  const sidebarContent = (
     <motion.aside
       animate={{ width: collapsed ? 64 : 256 }}
       transition={{ duration: 0.2, ease: "easeInOut" }}
@@ -294,5 +306,58 @@ export function Sidebar({
         </button>
       </div>
     </motion.aside>
+  );
+
+  return (
+    <>
+      {/* Mobile hamburger button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open menu"
+        className="fixed top-3 left-3 z-50 md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-card border border-border shadow-lg text-foreground"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* Mobile overlay */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile sidebar */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ x: -280 }}
+            animate={{ x: 0 }}
+            exit={{ x: -280 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed inset-y-0 left-0 z-50 md:hidden"
+          >
+            <div className="relative">
+              {sidebarContent}
+              <button
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close menu"
+                className="absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop sidebar */}
+      <div className="hidden md:block">{sidebarContent}</div>
+    </>
   );
 }

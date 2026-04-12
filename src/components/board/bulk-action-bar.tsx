@@ -144,7 +144,7 @@ export function BulkActionBar({ boardId }: BulkActionBarProps) {
           <button
             onClick={clearSelection}
             disabled={loading}
-            className="flex items-center justify-center w-6 h-6 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>

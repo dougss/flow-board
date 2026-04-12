@@ -11,17 +11,21 @@ import {
   Search,
   SlidersHorizontal,
   Download,
+  Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBoardStore } from "@/store/board-store";
 import { NewTaskDialog } from "@/components/board/new-task-dialog";
 import { FilterPanel } from "@/components/filters/filter-panel";
+import { BoardSettingsDialog } from "@/components/board/board-settings-dialog";
 import type { ViewType } from "@/types";
 
 interface HeaderProps {
   boardId?: string;
   title: string;
   projectName?: string;
+  projectId?: string;
+  boardDescription?: string | null;
 }
 
 const views: {
@@ -36,10 +40,17 @@ const views: {
   { id: "timeline", icon: Clock, label: "Timeline" },
 ];
 
-export function Header({ boardId, title, projectName }: HeaderProps) {
+export function Header({
+  boardId,
+  title,
+  projectName,
+  projectId,
+  boardDescription,
+}: HeaderProps) {
   const { activeView, setActiveView } = useBoardStore();
   const [filterOpen, setFilterOpen] = useState(false);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleFilterClick = () => {
     setFilterOpen((v) => !v);
@@ -72,7 +83,7 @@ export function Header({ boardId, title, projectName }: HeaderProps) {
               title={label}
               aria-label={`Switch to ${label} view`}
               className={cn(
-                "flex items-center justify-center w-8 h-7 rounded-md transition-colors",
+                "flex items-center justify-center w-9 h-9 rounded-md transition-colors",
                 activeView === id
                   ? "bg-indigo-600 text-white"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent",
@@ -90,7 +101,7 @@ export function Header({ boardId, title, projectName }: HeaderProps) {
           <button
             onClick={handleFilterClick}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors",
+              "flex items-center gap-1.5 px-3 min-h-[36px] rounded-md text-xs transition-colors",
               filterOpen
                 ? "bg-indigo-600/20 text-indigo-400"
                 : "text-muted-foreground hover:text-foreground hover:bg-accent",
@@ -114,21 +125,30 @@ export function Header({ boardId, title, projectName }: HeaderProps) {
         </button>
 
         {boardId && (
-          <div className="relative group">
-            <button
-              title="Export board"
-              aria-label="Export board"
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              onClick={() => {
-                window.open(
-                  `/api/export?boardId=${boardId}&format=json`,
-                  "_blank",
-                );
-              }}
-            >
-              <Download className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <button
+            title="Export board"
+            aria-label="Export board"
+            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            onClick={() => {
+              window.open(
+                `/api/export?boardId=${boardId}&format=json`,
+                "_blank",
+              );
+            }}
+          >
+            <Download className="w-3.5 h-3.5" />
+          </button>
+        )}
+
+        {boardId && (
+          <button
+            title="Board settings"
+            aria-label="Board settings"
+            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+          </button>
         )}
 
         <button
@@ -154,6 +174,18 @@ export function Header({ boardId, title, projectName }: HeaderProps) {
           boardId={boardId}
           open={filterOpen}
           onClose={() => setFilterOpen(false)}
+        />
+      )}
+
+      {boardId && (
+        <BoardSettingsDialog
+          boardId={boardId}
+          boardName={title}
+          boardDescription={boardDescription}
+          projectId={projectId}
+          projectName={projectName}
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
         />
       )}
     </header>

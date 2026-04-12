@@ -39,12 +39,13 @@ export async function PATCH(
 ): Promise<NextResponse> {
   const { boardId } = await params;
   const body = await request.json();
-  const { name, defaultView } = body;
+  const { name, description, defaultView } = body;
 
   const board = await db.board.update({
     where: { id: boardId },
     data: {
       ...(name !== undefined && { name }),
+      ...(description !== undefined && { description }),
       ...(defaultView !== undefined && { defaultView }),
     },
   });

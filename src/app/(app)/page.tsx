@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { CreateFirstProject } from "./create-first-project";
+import { CreateFirstProject, LoadDemoData } from "./create-first-project";
 
 export default async function AppHomePage() {
   const workspace = await db.workspace.findFirst({
@@ -53,15 +53,17 @@ export default async function AppHomePage() {
         </p>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex items-center gap-3">
+          <CreateFirstProject />
+          <LoadDemoData />
+        </div>
         <a
           href="/import"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition-colors"
+          className="text-muted-foreground hover:text-foreground text-xs transition-colors underline underline-offset-4"
         >
-          Import from Obsidian
+          or import from Obsidian
         </a>
-        <span className="text-muted-foreground text-xs">or</span>
-        <CreateFirstProject />
       </div>
     </div>
   );

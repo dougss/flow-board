@@ -15,7 +15,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
 
   const board = await db.board.findUnique({
     where: { id: boardId },
-    include: { project: { select: { name: true } } },
+    include: { project: { select: { id: true, name: true } } },
   });
 
   if (!board) notFound();
@@ -26,6 +26,8 @@ export default async function BoardPage({ params }: BoardPageProps) {
         boardId={boardId}
         title={board.name}
         projectName={board.project.name}
+        projectId={board.project.id}
+        boardDescription={board.description}
       />
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         <ViewSwitcher boardId={boardId} />
