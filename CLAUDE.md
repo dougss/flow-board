@@ -42,26 +42,27 @@ src/
 │   │   ├── create-first-project.tsx  # Welcome page actions (client)
 │   │   ├── layout.tsx          # Layout com sidebar
 │   │   └── page.tsx            # Home — redirect ou welcome
-│   ├── api/                    # 23 API routes
+│   ├── api/                    # 25 route files (15 resource dirs)
+│   │   ├── activity/           # GET recent activity
 │   │   ├── assignees/          # GET distinct assignees
-│   │   ├── boards/             # CRUD boards
-│   │   ├── columns/            # CRUD + reorder colunas
-│   │   ├── comments/           # CRUD comentarios
+│   │   ├── boards/             # CRUD boards (incl [boardId])
+│   │   ├── columns/            # CRUD + reorder colunas (incl [columnId])
+│   │   ├── comments/           # CRUD comentarios (incl [commentId])
 │   │   ├── dashboard/          # Stats e metricas
 │   │   ├── dependencies/       # Task dependencies
 │   │   ├── export/             # JSON/CSV export
 │   │   ├── import/             # Obsidian vault import + preview
-│   │   ├── labels/             # CRUD labels
+│   │   ├── labels/             # CRUD labels (incl [labelId])
 │   │   ├── projects/           # CRUD projetos (incl [projectId])
 │   │   ├── search/             # Full-text search
 │   │   ├── seed/               # Seed demo data
-│   │   ├── tasks/              # CRUD + reorder tasks
+│   │   ├── tasks/              # CRUD + reorder tasks (incl [taskId])
 │   │   └── workspaces/         # CRUD workspaces (incl [workspaceId])
 │   ├── globals.css             # Tailwind v4 + CSS vars (dark/light) + reduced-motion + cursor
 │   ├── layout.tsx              # Root layout com Providers + skip link
 │   └── providers.tsx           # QueryClient + Theme + Toaster
 ├── components/
-│   ├── board/                  # board-view, column, task-card, bulk-action-bar, board-settings-dialog, due-date-notifier, task-url-sync
+│   ├── board/                  # board-view, column, column-dialog, task-card, bulk-action-bar, board-settings-dialog, new-task-dialog, due-date-notifier, task-url-sync
 │   ├── dashboard/              # activity-feed
 │   ├── filters/                # filter-panel, search-dialog (Cmd+K)
 │   ├── graph/                  # graph-view, task-node, column-header-node
@@ -70,7 +71,7 @@ src/
 │   ├── ui/                     # 20 shadcn-style components
 │   └── views/                  # list-view, table-view, timeline-view
 ├── hooks/                      # use-board, use-task, use-dashboard, use-activity, use-keyboard-shortcuts
-├── lib/                        # db (Prisma singleton), utils (cn, dates), query-client
+├── lib/                        # db (Prisma singleton), utils (cn, dates), query-client, filter-tasks
 ├── store/                      # board-store, theme-store, undo-store (Zustand)
 ├── types/                      # TypeScript types e interfaces
 ├── test/                       # setup.ts, e2e/ (smoke.spec.ts, flows.spec.ts)
@@ -87,13 +88,40 @@ Workspace → Project → Board → Column → Task
                                          └── Activity
 ```
 
-### 5 Views
+### 5 Views (todas com cross-view filtering)
 
-1. **Board** (Kanban) — DnD com @dnd-kit, colunas horizontais, bulk selection
-2. **Graph** — Nodes com @xyflow/react, edges de dependencia
-3. **List** — Tabela sortavel, group by, bulk actions funcionais
-4. **Table** — Spreadsheet inline edit, colunas redimensionaveis
-5. **Timeline** — Gantt com barras por dueDate (inicio em createdAt), drag para alterar data
+1. **Board** (Kanban) — DnD com @dnd-kit, colunas horizontais, bulk selection, WIP limits
+2. **Graph** — Nodes com @xyflow/react, edges de dependencia, hover highlight
+3. **List** — Tabela sortavel, group by, bulk actions (move/priority/delete), shift-select
+4. **Table** — Spreadsheet inline edit, colunas redimensionaveis, column visibility toggle
+5. **Timeline** — Gantt com barras por dueDate (inicio em createdAt), drag para alterar data, zoom day/week/month
+
+### Cross-View Filtering
+
+Filtros definidos no `FilterPanel` (header) aplicam-se em todas as 5 views via `filterTasks()` (`src/lib/filter-tasks.ts`).
+
+**Filtros disponiveis:**
+- **Status** — por column ID (estavel, sobrevive renomeacao de colunas). Chips derivados do `useBoardQuery` (reativo). Reset automatico ao trocar de board.
+- **Priority** — urgent, high, medium, low, none
+- **Type** — 12 tipos (ver TaskType abaixo)
+- **Labels** — por label ID
+- **Assignee** — busca parcial case-insensitive
+- **Due Date** — has/no due date
+- **Search** — busca no titulo
+
+**Comportamento:**
+- Board view passa `totalTaskCount` ao Column para manter WIP limits/contagem corretos
+- Bulk selection e limpa automaticamente ao mudar filtros (board + list views)
+- Graph view filtra edges orfas (dependencias para tasks escondidas)
+
+### Task Types (12)
+
+```typescript
+type TaskType =
+  | "task" | "bug" | "feature" | "story" | "epic" | "subtask"
+  | "improvement" | "tech-debt" | "investigation"
+  | "architecture" | "integration" | "infra";
+```
 
 ### Request Flow
 
@@ -219,7 +247,25 @@ pnpm dev
 
 - GitHub Actions: pnpm install → db:generate → db:push → typecheck → lint → test → playwright
 
-## Docker
+## Deployment (Mac Mini — producao local)
+
+- **LaunchAgent:** `dev.flow-board` (auto-start, KeepAlive)
+- **Plist:** `~/Library/LaunchAgents/dev.flow-board.plist`
+- **Porta:** 3002 (0.0.0.0)
+- **Acesso:** http://192.168.1.100:3002
+- **Build:** `npx next build --experimental-build-mode compile` (skip prerender)
+- **Start:** `next start --hostname 0.0.0.0 --port 3002`
+- **Node:** `/opt/homebrew/opt/node@22/bin/node`
+- **Logs:** stdout/stderr via LaunchAgent (Console.app ou `log show`)
+- **DB:** SQLite em `prisma/dev.db` (local, sem Docker)
+
+**Restart apos mudancas:**
+```bash
+launchctl unload ~/Library/LaunchAgents/dev.flow-board.plist
+launchctl load ~/Library/LaunchAgents/dev.flow-board.plist
+```
+
+## Docker (alternativo)
 
 ```bash
 docker compose up -d
