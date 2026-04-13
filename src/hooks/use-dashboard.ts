@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 interface DashboardData {
   totalTasks: number;
@@ -41,19 +41,7 @@ export function useDashboard() {
     staleTime: 60_000,
   });
 
-  const initialized = useRef(false);
-  useEffect(() => {
-    if (
-      !initialized.current &&
-      boardsQuery.data &&
-      boardsQuery.data.length > 0
-    ) {
-      setBoardId(boardsQuery.data[0].id);
-      initialized.current = true;
-    }
-  }, [boardsQuery.data]);
-
-  const selectedBoardId = boardId;
+  const selectedBoardId = boardId || (boardsQuery.data?.[0]?.id ?? "");
 
   const dashboardQuery = useQuery({
     queryKey: ["dashboard", selectedBoardId],

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -55,9 +55,7 @@ export function Sidebar({
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [wsSettingsOpen, setWsSettingsOpen] = useState(false);
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
-    new Set(),
-  );
+  const [userExpandedProjects, setUserExpandedProjects] = useState<Set<string> | null>(null);
   const pathname = usePathname();
   const { theme, toggleTheme } = useThemeStore();
 
@@ -68,13 +66,8 @@ export function Sidebar({
     staleTime: 30_000,
   });
 
-  const initialized = useRef(false);
-  useEffect(() => {
-    if (!initialized.current && projects.length > 0) {
-      setExpandedProjects(new Set([projects[0].id]));
-      initialized.current = true;
-    }
-  }, [projects]);
+  const expandedProjects = userExpandedProjects ?? (projects.length > 0 ? new Set([projects[0].id]) : new Set<string>());
+  const setExpandedProjects = setUserExpandedProjects;
 
   const toggleProject = (projectId: string) => {
     setExpandedProjects((prev) => {
@@ -94,14 +87,12 @@ export function Sidebar({
     { href: "/settings", icon: Settings, label: "Settings" },
   ];
 
-  // Close mobile sidebar on navigation
-  const pathnameRef = useRef(pathname);
-  useEffect(() => {
-    if (pathnameRef.current !== pathname) {
-      setMobileOpen(false);
-      pathnameRef.current = pathname;
-    }
-  }, [pathname]);
+  // Close mobile sidebar on navigation (derived state pattern)
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setMobileOpen(false);
+  }
 
   const sidebarContent = (
     <motion.aside

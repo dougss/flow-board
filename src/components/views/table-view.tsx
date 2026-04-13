@@ -151,7 +151,7 @@ export function TableView({ boardId }: TableViewProps): React.JSX.Element {
     setEditValue(raw != null ? String(raw) : "");
   };
 
-  const commitEdit = async (task: FlatTask) => {
+  const commitEdit = useCallback(async (task: FlatTask) => {
     if (!editing) return;
     setEditing(null);
     try {
@@ -163,7 +163,7 @@ export function TableView({ boardId }: TableViewProps): React.JSX.Element {
     } catch {
       // silent — optimistic UI, parent query will refetch
     }
-  };
+  }, [editing, editValue]);
 
   const onResizeMouseDown = (e: React.MouseEvent, key: string) => {
     e.preventDefault();

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { Prisma } from "@/generated/prisma/client";
 import { NextResponse } from "next/server";
 
 const LABEL_DEFS = [
@@ -18,7 +19,7 @@ const COLUMN_DEFS = [
 ];
 
 export async function POST(): Promise<NextResponse> {
-  const result = await db.$transaction(async (tx: any) => {
+  const result = await db.$transaction(async (tx: Prisma.TransactionClient) => {
     const workspace = await tx.workspace.create({
       data: { name: "Leve Saúde" },
     });

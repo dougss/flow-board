@@ -10,7 +10,6 @@ import {
   addDays,
   subDays,
   startOfWeek,
-  endOfWeek,
 } from "date-fns";
 import { CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";

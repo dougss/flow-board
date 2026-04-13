@@ -23,7 +23,7 @@ import {
   ColumnHeaderNode,
   type ColumnHeaderNodeData,
 } from "./column-header-node";
-import type { ColumnWithTasks, TaskWithRelations } from "@/types";
+import type { ColumnWithTasks } from "@/types";
 
 const COLUMN_WIDTH = 280;
 const COLUMN_GAP = 60;

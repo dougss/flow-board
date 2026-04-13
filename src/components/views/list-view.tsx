@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   ChevronUp,
   ChevronDown,
@@ -80,6 +80,45 @@ type FlatTask = TaskWithRelations & {
   [key: string]: unknown;
 };
 
+function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
+  if (sortKey !== col) return <ChevronUp size={12} className="opacity-20" />;
+  return sortDir === "asc" ? (
+    <ChevronUp size={12} />
+  ) : (
+    <ChevronDown size={12} />
+  );
+}
+
+function HeaderCell({
+  label,
+  col,
+  className,
+  sortKey,
+  sortDir,
+  onSort,
+}: {
+  label: string;
+  col: SortKey;
+  className?: string;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onSort: (col: SortKey) => void;
+}) {
+  return (
+    <th
+      className={cn(
+        "px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground cursor-pointer select-none hover:text-foreground whitespace-nowrap",
+        className,
+      )}
+      onClick={() => onSort(col)}
+    >
+      <span className="flex items-center gap-1">
+        {label} <SortIcon col={col} sortKey={sortKey} sortDir={sortDir} />
+      </span>
+    </th>
+  );
+}
+
 type ListViewProps = { boardId: string };
 
 export function ListView({ boardId }: ListViewProps): React.JSX.Element {
@@ -97,10 +136,12 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
   const [lastSelected, setLastSelected] = useState<string | null>(null);
 
   // Clear selections when filters change to prevent operating on hidden tasks
-  useEffect(() => {
+  const [prevFilters, setPrevFilters] = useState(filters);
+  if (prevFilters !== filters) {
+    setPrevFilters(filters);
     setSelected(new Set());
     setLastSelected(null);
-  }, [filters]);
+  }
 
   const allTasks = useMemo<FlatTask[]>(() => {
     if (!board?.columns) return [];
@@ -192,37 +233,6 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
   }, []);
 
   const clearSelection = () => setSelected(new Set());
-
-  const SortIcon = ({ col }: { col: SortKey }) => {
-    if (sortKey !== col) return <ChevronUp size={12} className="opacity-20" />;
-    return sortDir === "asc" ? (
-      <ChevronUp size={12} />
-    ) : (
-      <ChevronDown size={12} />
-    );
-  };
-
-  const HeaderCell = ({
-    label,
-    col,
-    className,
-  }: {
-    label: string;
-    col: SortKey;
-    className?: string;
-  }) => (
-    <th
-      className={cn(
-        "px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground cursor-pointer select-none hover:text-foreground whitespace-nowrap",
-        className,
-      )}
-      onClick={() => handleSort(col)}
-    >
-      <span className="flex items-center gap-1">
-        {label} <SortIcon col={col} />
-      </span>
-    </th>
-  );
 
   const isOverdue = (dueDate: string | null) =>
     dueDate ? new Date(dueDate) < new Date() : false;
@@ -380,13 +390,13 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
                 />
               </th>
               <th className="w-8 px-2 py-2.5" />
-              <HeaderCell label="Title" col="title" className="min-w-[220px]" />
-              <HeaderCell label="Status" col="status" />
-              <HeaderCell label="Priority" col="priority" />
-              <HeaderCell label="Type" col="type" />
-              <HeaderCell label="Assignee" col="assignedTo" />
-              <HeaderCell label="Due Date" col="dueDate" />
-              <HeaderCell label="Points" col="storyPoints" />
+              <HeaderCell label="Title" col="title" className="min-w-[220px]" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+              <HeaderCell label="Status" col="status" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+              <HeaderCell label="Priority" col="priority" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+              <HeaderCell label="Type" col="type" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+              <HeaderCell label="Assignee" col="assignedTo" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+              <HeaderCell label="Due Date" col="dueDate" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+              <HeaderCell label="Points" col="storyPoints" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
               <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground">
                 Labels
               </th>
