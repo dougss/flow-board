@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useBoardQuery } from "@/hooks/use-board";
 import { useBoardStore } from "@/store/board-store";
+import { filterTasks } from "@/lib/filter-tasks";
 import type { TaskWithRelations } from "@/types";
 
 type ZoomLevel = "day" | "week" | "month";
@@ -53,6 +54,7 @@ export function TimelineView({
 }: TimelineViewProps): React.JSX.Element {
   const { data: board } = useBoardQuery(boardId);
   const selectTask = useBoardStore((s) => s.selectTask);
+  const filters = useBoardStore((s) => s.filters);
 
   const today = useMemo(() => new Date(), []);
   const [zoom, setZoom] = useState<ZoomLevel>("week");
@@ -77,16 +79,15 @@ export function TimelineView({
 
   const tasks = useMemo<FlatTask[]>(() => {
     if (!board?.columns) return [];
-    return board.columns
-      .flatMap((col) =>
-        col.tasks.map((t) => ({
-          ...t,
-          columnName: col.name,
-          columnColor: col.color ?? "#6366f1",
-        })),
-      )
-      .filter((t) => t.dueDate != null) as FlatTask[];
-  }, [board]);
+    const flat = board.columns.flatMap((col) =>
+      col.tasks.map((t) => ({
+        ...t,
+        columnName: col.name,
+        columnColor: col.color ?? "#6366f1",
+      })),
+    ) as FlatTask[];
+    return filterTasks(flat, filters).filter((t) => t.dueDate != null);
+  }, [board, filters]);
 
   const getTaskStart = useCallback(
     (task: FlatTask): Date => {

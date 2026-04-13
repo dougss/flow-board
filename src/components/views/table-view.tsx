@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useBoardQuery } from "@/hooks/use-board";
 import { useBoardStore } from "@/store/board-store";
+import { filterTasks } from "@/lib/filter-tasks";
 import type { TaskWithRelations, TaskType, TaskPriority } from "@/types";
 
 type SortKey = keyof Pick<
@@ -34,9 +35,12 @@ const PRIORITY_ORDER: Record<string, number> = {
   none: 4,
 };
 const TASK_TYPES: TaskType[] = [
+  "task",
   "bug",
   "feature",
-  "task",
+  "story",
+  "epic",
+  "subtask",
   "improvement",
   "tech-debt",
   "investigation",
@@ -82,6 +86,7 @@ type TableViewProps = { boardId: string };
 export function TableView({ boardId }: TableViewProps): React.JSX.Element {
   const { data: board } = useBoardQuery(boardId);
   const selectTask = useBoardStore((s) => s.selectTask);
+  const filters = useBoardStore((s) => s.filters);
 
   const [sortKey, setSortKey] = useState<SortKey>("title");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -102,7 +107,7 @@ export function TableView({ boardId }: TableViewProps): React.JSX.Element {
 
   const allTasks = useMemo<FlatTask[]>(() => {
     if (!board?.columns) return [];
-    return board.columns.flatMap((col) =>
+    const flat = board.columns.flatMap((col) =>
       col.tasks.map((t) => ({
         ...t,
         columnName: col.name,
@@ -110,7 +115,8 @@ export function TableView({ boardId }: TableViewProps): React.JSX.Element {
         columnId: col.id,
       })),
     ) as FlatTask[];
-  }, [board]);
+    return filterTasks(flat, filters);
+  }, [board, filters]);
 
   const sorted = useMemo(() => {
     return [...allTasks].sort((a, b) => {

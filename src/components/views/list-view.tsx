@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   ChevronUp,
   ChevronDown,
@@ -25,6 +25,7 @@ import {
 import { cn, formatDate } from "@/lib/utils";
 import { useBoardQuery, useUpdateTask, useDeleteTask } from "@/hooks/use-board";
 import { useBoardStore } from "@/store/board-store";
+import { filterTasks } from "@/lib/filter-tasks";
 import { toast } from "sonner";
 import type { TaskWithRelations, TaskPriority } from "@/types";
 
@@ -84,6 +85,7 @@ type ListViewProps = { boardId: string };
 export function ListView({ boardId }: ListViewProps): React.JSX.Element {
   const { data: board } = useBoardQuery(boardId);
   const selectTask = useBoardStore((s) => s.selectTask);
+  const filters = useBoardStore((s) => s.filters);
   const updateTask = useUpdateTask(boardId);
   const deleteTask = useDeleteTask(boardId);
   const [bulkLoading, setBulkLoading] = useState(false);
@@ -94,16 +96,23 @@ export function ListView({ boardId }: ListViewProps): React.JSX.Element {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [lastSelected, setLastSelected] = useState<string | null>(null);
 
+  // Clear selections when filters change to prevent operating on hidden tasks
+  useEffect(() => {
+    setSelected(new Set());
+    setLastSelected(null);
+  }, [filters]);
+
   const allTasks = useMemo<FlatTask[]>(() => {
     if (!board?.columns) return [];
-    return board.columns.flatMap((col) =>
+    const flat = board.columns.flatMap((col) =>
       col.tasks.map((t) => ({
         ...t,
         columnName: col.name,
         columnColor: col.color ?? "#6366f1",
       })),
     ) as FlatTask[];
-  }, [board]);
+    return filterTasks(flat, filters);
+  }, [board, filters]);
 
   const sorted = useMemo(() => {
     return [...allTasks].sort((a, b) => {

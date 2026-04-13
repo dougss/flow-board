@@ -61,6 +61,7 @@ export function Header({
   };
 
   return (
+    <>
     <header className="h-14 flex items-center gap-4 px-4 border-b border-border bg-background flex-shrink-0">
       {/* Breadcrumb */}
       <nav
@@ -188,14 +189,6 @@ export function Header({
       )}
 
       {boardId && (
-        <FilterPanel
-          boardId={boardId}
-          open={filterOpen}
-          onClose={() => setFilterOpen(false)}
-        />
-      )}
-
-      {boardId && (
         <BoardSettingsDialog
           boardId={boardId}
           boardName={title}
@@ -207,5 +200,14 @@ export function Header({
         />
       )}
     </header>
+
+    {boardId && (
+      <FilterPanel
+        boardId={boardId}
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+      />
+    )}
+    </>
   );
 }

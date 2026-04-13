@@ -7,7 +7,10 @@ export type TaskType =
   | "investigation"
   | "architecture"
   | "integration"
-  | "infra";
+  | "infra"
+  | "story"
+  | "epic"
+  | "subtask";
 
 export type TaskPriority = "urgent" | "high" | "medium" | "low" | "none";
 

@@ -17,6 +17,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useBoardQuery } from "@/hooks/use-board";
 import { useBoardStore } from "@/store/board-store";
+import { filterTasks } from "@/lib/filter-tasks";
 import { TaskNode, type TaskNodeData } from "./task-node";
 import {
   ColumnHeaderNode,
@@ -141,22 +142,39 @@ type GraphViewProps = {
 export function GraphView({ boardId }: GraphViewProps): React.JSX.Element {
   const { data: board } = useBoardQuery(boardId);
   const selectTask = useBoardStore((s) => s.selectTask);
+  const filters = useBoardStore((s) => s.filters);
+
+  const filteredColumns = useMemo(() => {
+    if (!board?.columns) return [];
+    return (board.columns as ColumnWithTasks[]).map((col) => ({
+      ...col,
+      tasks: filterTasks(col.tasks, filters),
+    }));
+  }, [board, filters]);
 
   const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
-    if (!board?.columns) return { nodes: [], edges: [] };
-    return buildNodesAndEdges(board.columns as ColumnWithTasks[]);
-  }, [board]);
+    if (!filteredColumns.length) return { nodes: [], edges: [] };
+    const allTaskIds = new Set(filteredColumns.flatMap((c) => c.tasks.map((t) => t.id)));
+    const result = buildNodesAndEdges(filteredColumns as ColumnWithTasks[]);
+    // Remove edges pointing to filtered-out tasks
+    result.edges = result.edges.filter(
+      (e) => allTaskIds.has(e.source.replace("task-", "")) && allTaskIds.has(e.target.replace("task-", "")),
+    );
+    return result;
+  }, [filteredColumns]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   useEffect(() => {
-    const { nodes: n, edges: e } = buildNodesAndEdges(
-      (board?.columns ?? []) as ColumnWithTasks[],
+    const allTaskIds = new Set(filteredColumns.flatMap((c) => c.tasks.map((t) => t.id)));
+    const result = buildNodesAndEdges(filteredColumns as ColumnWithTasks[]);
+    result.edges = result.edges.filter(
+      (e) => allTaskIds.has(e.source.replace("task-", "")) && allTaskIds.has(e.target.replace("task-", "")),
     );
-    setNodes(n);
-    setEdges(e);
-  }, [board, setNodes, setEdges]);
+    setNodes(result.nodes);
+    setEdges(result.edges);
+  }, [filteredColumns, setNodes, setEdges]);
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {

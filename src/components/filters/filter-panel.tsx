@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBoardStore } from "@/store/board-store";
+import { useBoardQuery } from "@/hooks/use-board";
 
 interface FilterPanelProps {
   boardId: string;
@@ -17,9 +18,15 @@ const TYPES = [
   "task",
   "bug",
   "feature",
-  "improvement",
-  "chore",
+  "story",
   "epic",
+  "subtask",
+  "improvement",
+  "tech-debt",
+  "investigation",
+  "architecture",
+  "integration",
+  "infra",
 ] as const;
 interface Label {
   id: string;
@@ -29,7 +36,26 @@ interface Label {
 
 export function FilterPanel({ boardId, open, onClose }: FilterPanelProps) {
   const { filters, updateFilters, resetFilters } = useBoardStore();
+  const { data: board } = useBoardQuery(boardId);
   const [labels, setLabels] = useState<Label[]>([]);
+  const prevBoardId = useRef(boardId);
+
+  // Reset status filters when navigating to a different board (IDs are board-specific)
+  useEffect(() => {
+    if (prevBoardId.current !== boardId) {
+      prevBoardId.current = boardId;
+      if (filters.statuses.length > 0) {
+        updateFilters({ statuses: [] });
+      }
+    }
+  }, [boardId, filters.statuses.length, updateFilters]);
+
+  const statuses = useMemo(() => {
+    if (!board?.columns) return [];
+    return [...board.columns]
+      .sort((a, b) => a.position - b.position)
+      .map((c) => ({ id: c.id, name: c.name, color: c.color ?? "#6366f1" }));
+  }, [board]);
 
   useEffect(() => {
     fetch("/api/labels")
@@ -58,17 +84,18 @@ export function FilterPanel({ boardId, open, onClose }: FilterPanelProps) {
           animate={{ height: "auto", opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.2, ease: "easeInOut" }}
-          className="overflow-hidden border-b border-zinc-800 bg-zinc-900"
+          className="overflow-hidden border-b border-border bg-card"
         >
           <div className="px-4 py-3 flex items-start gap-6 flex-wrap">
             {/* Status */}
             <FilterGroup label="Status">
-              {["todo", "in_progress", "in_review", "done"].map((s) => (
+              {statuses.map((s) => (
                 <Chip
-                  key={s}
-                  label={s}
-                  active={(filters.statuses ?? []).includes(s)}
-                  onClick={() => toggle("statuses", s)}
+                  key={s.id}
+                  label={s.name}
+                  active={(filters.statuses ?? []).includes(s.id)}
+                  onClick={() => toggle("statuses", s.id)}
+                  color={s.color}
                 />
               ))}
             </FilterGroup>

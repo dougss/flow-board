@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -21,6 +21,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Column } from "./column";
 import { TaskCard } from "./task-card";
 import { useBoardQuery, useReorderTask } from "@/hooks/use-board";
+import { useBoardStore } from "@/store/board-store";
+import { filterTasks } from "@/lib/filter-tasks";
 import { BulkActionBar } from "./bulk-action-bar";
 import type { TaskWithRelations } from "@/types";
 
@@ -48,6 +50,13 @@ export function BoardView({ boardId }: BoardViewProps) {
   const queryClient = useQueryClient();
   const { data: board, isLoading } = useBoardQuery(boardId);
   const reorderTask = useReorderTask(boardId);
+  const filters = useBoardStore((s) => s.filters);
+  const clearSelection = useBoardStore((s) => s.clearSelection);
+
+  // Clear bulk selection when filters change to prevent operating on hidden tasks
+  useEffect(() => {
+    clearSelection();
+  }, [filters, clearSelection]);
 
   const [activeTask, setActiveTask] = useState<BoardTask | null>(null);
 
@@ -142,9 +151,15 @@ export function BoardView({ boardId }: BoardViewProps) {
     const targetCol = board.columns.find(
       (c: { id: string }) => c.id === targetColId,
     );
-    const position = targetCol
-      ? targetCol.tasks.findIndex((t: { id: string }) => t.id === overId)
-      : 0;
+    // Compute position in the full (unfiltered) task list so hidden tasks
+    // don't shift the index and cause tasks to jump to wrong spots.
+    let position = 0;
+    if (targetCol) {
+      const overIdx = targetCol.tasks.findIndex(
+        (t: { id: string }) => t.id === overId,
+      );
+      position = overIdx >= 0 ? overIdx : targetCol.tasks.length;
+    }
 
     try {
       await reorderTask.mutateAsync({
@@ -195,9 +210,17 @@ export function BoardView({ boardId }: BoardViewProps) {
     >
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex gap-4 p-6 items-start">
-          {board.columns.map((col: Parameters<typeof Column>[0]["column"]) => (
-            <Column key={col.id} column={col} boardId={boardId} />
-          ))}
+          {board.columns.map((col: Parameters<typeof Column>[0]["column"]) => {
+            const filtered = filterTasks(col.tasks, filters);
+            return (
+              <Column
+                key={col.id}
+                column={{ ...col, tasks: filtered }}
+                totalTaskCount={col.tasks.length}
+                boardId={boardId}
+              />
+            );
+          })}
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>

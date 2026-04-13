@@ -28,6 +28,9 @@ const TYPE_ICONS: Record<TaskType, React.ReactNode> = {
   architecture: <Zap className="h-3 w-3" />,
   integration: <FileText className="h-3 w-3" />,
   infra: <CheckSquare className="h-3 w-3" />,
+  story: <FileText className="h-3 w-3" />,
+  epic: <Zap className="h-3 w-3" />,
+  subtask: <CheckSquare className="h-3 w-3" />,
 };
 
 const PRIORITY_BORDER: Record<TaskPriority, string> = {

@@ -30,9 +30,10 @@ import type { ColumnWithTasks } from "@/types";
 interface ColumnProps {
   column: ColumnWithTasks;
   boardId: string;
+  totalTaskCount?: number;
 }
 
-export function Column({ column, boardId }: ColumnProps) {
+export function Column({ column, boardId, totalTaskCount }: ColumnProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [quickAdd, setQuickAdd] = useState("");
   const [editingName, setEditingName] = useState(false);
@@ -45,8 +46,8 @@ export function Column({ column, boardId }: ColumnProps) {
   const deleteColumn = useDeleteColumn(boardId);
 
   const taskIds = column.tasks.map((t) => t.id);
-  const wipExceeded =
-    column.wipLimit != null && column.tasks.length > column.wipLimit;
+  const total = totalTaskCount ?? column.tasks.length;
+  const wipExceeded = column.wipLimit != null && total > column.wipLimit;
 
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
@@ -130,7 +131,7 @@ export function Column({ column, boardId }: ColumnProps) {
             variant={wipExceeded ? "destructive" : "secondary"}
             className="text-xs px-1.5 py-0 h-4 tabular-nums"
           >
-            {column.tasks.length}
+            {total}
             {column.wipLimit != null && `/${column.wipLimit}`}
           </Badge>
         </div>

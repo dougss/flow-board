@@ -40,6 +40,9 @@ const TASK_TYPES: TaskType[] = [
   "task",
   "bug",
   "feature",
+  "story",
+  "epic",
+  "subtask",
   "improvement",
   "tech-debt",
   "investigation",
@@ -58,6 +61,9 @@ const TASK_TYPE_LABELS: Record<TaskType, string> = {
   architecture: "Architecture",
   integration: "Integration",
   infra: "Infra",
+  story: "Story",
+  epic: "Epic",
+  subtask: "Subtask",
 };
 const PRIORITIES: TaskPriority[] = ["none", "low", "medium", "high", "urgent"];
 
