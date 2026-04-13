@@ -48,7 +48,8 @@ test.describe("search flow", () => {
     await searchInput.fill("test");
     // Search should show results or empty state
     await page.waitForTimeout(500);
-    const hasResults = await page.locator('[role="dialog"]').isVisible();
+    const searchDialog = page.locator('[role="dialog"][data-state="open"]');
+    const hasResults = await searchDialog.isVisible();
     expect(hasResults).toBe(true);
 
     // Close with Escape
